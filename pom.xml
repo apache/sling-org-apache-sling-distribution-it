@@ -96,9 +96,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/it</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/distribution/it</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/distribution/it</url>
+        <connection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-distribution-it.git</conncetion>
+        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/sling-org-apache-sling-distribution-it.git</developerConnection>
+        <url>https://gitbox.apache.org/repos/asf?p=sling-org-apache-sling-distribution-it.git</url>
     </scm>
 
     <build>
