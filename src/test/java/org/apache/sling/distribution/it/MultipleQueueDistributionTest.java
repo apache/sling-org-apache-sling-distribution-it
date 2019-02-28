@@ -21,6 +21,7 @@ package org.apache.sling.distribution.it;
 
 import org.apache.sling.distribution.DistributionRequestType;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -42,6 +43,7 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
 
     final static String DELETE_LIMIT = "100";
 
+    @Ignore
     @Test
     public void testQueues() throws Exception {
         Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(author, "queue-multiple");
@@ -54,6 +56,7 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
 
     }
 
+    @Ignore
     @Test
     public void testDistributeQueues() throws Exception {
 
@@ -109,6 +112,7 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
         assertEquals(0, queues.get("endpoint2").get("itemsCount"));
     }
 
+    @Ignore
     @Test
     public void testCopyDistributeQueues() throws Exception {
 
