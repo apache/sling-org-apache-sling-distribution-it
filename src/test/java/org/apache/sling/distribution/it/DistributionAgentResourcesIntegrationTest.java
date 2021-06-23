@@ -20,7 +20,6 @@ package org.apache.sling.distribution.it;
 
 import java.util.UUID;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.apache.sling.distribution.it.DistributionUtils.agentRootUrl;
@@ -179,22 +178,6 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
         deleteNode(author, newConfigResource);
         assertNotExists(authorClient, newConfigResource);
         assertNotExists(authorClient, "/etc/distribution/" + agentName);
-    }
-
-
-    @Test
-    @Ignore
-    public void testAgentConfigurationResourceUpdate() throws Exception {
-        String agentName = "sample-create-config" + UUID.randomUUID();
-        String newConfigResource = authorAgentConfigUrl(agentName);
-
-        authorClient.createNode(newConfigResource, "name", agentName);
-        assertExists(authorClient, newConfigResource);
-        authorClient.setProperties(newConfigResource, "packageExporter", "exporters/remote/updated");
-        assertResponseContains(author, newConfigResource,
-                "sling:resourceType", "sling/distribution/setting/agent",
-                "name", agentName,
-                "packageExporter", "updated");
     }
 
 }
