@@ -37,7 +37,7 @@ public class DistributionPackageExporterImporterTest extends DistributionIntegra
 
         String content = doExport(publish, "default", DistributionRequestType.ADD, nodePath);
 
-        publishClient.delete(nodePath);
+        publishClient.deletePath(nodePath);
         assertNotExists(publishClient, nodePath);
 
         doImport(publish, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));

@@ -31,6 +31,7 @@ import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists
 import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
 import static org.apache.sling.distribution.it.DistributionUtils.distribute;
 import static org.apache.sling.distribution.it.DistributionUtils.distributeDeep;
+import static org.apache.sling.testing.clients.SlingClient.DEFAULT_NODE_TYPE;
 
 /**
  * Integration test for forward distribution
@@ -42,14 +43,10 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
 
     @Parameterized.Parameters
     public static Collection<Object[]> generateData() {
-        return Arrays.asList(new Object[][] {
-            { "publish"},
-            { "impersonate-publish"},
-        });
+        return Arrays.asList(new Object[][] { { "publish"}, { "impersonate-publish"} });
     }
 
     public ForwardDistributionTest(String publishAgent) {
-
         this.publishAgent = publishAgent;
     }
 
@@ -84,7 +81,7 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
         assertExists(authorClient, nodePath);
 
         String childPath = nodePath + "/child";
-        authorClient.createNode(childPath);
+        authorClient.createNode(childPath, DEFAULT_NODE_TYPE);
         assertExists(authorClient, childPath);
 
         distribute(author, publishAgent, DistributionRequestType.ADD, nodePath);
@@ -98,7 +95,7 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
         assertExists(authorClient, nodePath);
 
         String childPath = nodePath + "/child";
-        authorClient.createNode(childPath);
+        authorClient.createNode(childPath, DEFAULT_NODE_TYPE);
         assertExists(authorClient, childPath);
 
         distributeDeep(author, publishAgent, DistributionRequestType.ADD, nodePath);
@@ -112,11 +109,11 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
         assertExists(authorClient, nodePath);
 
         String childPath = nodePath + "/child";
-        authorClient.createNode(childPath);
+        authorClient.createNode(childPath, DEFAULT_NODE_TYPE);
         assertExists(authorClient, childPath);
 
         String excludedChildPath = nodePath + "/excluded";
-        authorClient.createNode(excludedChildPath);
+        authorClient.createNode(excludedChildPath, DEFAULT_NODE_TYPE);
         assertExists(authorClient, excludedChildPath);
 
         distributeDeep(author, publishAgent, DistributionRequestType.ADD, nodePath);
@@ -133,12 +130,12 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
         assertExists(authorClient, nodePath);
 
         String child1Path = nodePath + "/child1";
-        authorClient.createNode(child1Path);
+        authorClient.createNode(child1Path, DEFAULT_NODE_TYPE);
         assertExists(authorClient, child1Path);
 
         String child2Path = nodePath + "/child2";
 
-        publishClient.createNode(child2Path);
+        publishClient.createNode(child2Path, DEFAULT_NODE_TYPE);
         assertExists(publishClient, child2Path);
 
         distribute(author, publishAgent, DistributionRequestType.ADD, child1Path);
@@ -154,12 +151,12 @@ public class ForwardDistributionTest extends DistributionIntegrationTestBase {
         assertExists(authorClient, nodePath);
 
         String child1Path = nodePath + "/child1";
-        authorClient.createNode(child1Path);
+        authorClient.createNode(child1Path, DEFAULT_NODE_TYPE);
         assertExists(authorClient, child1Path);
 
         String child2Path = nodePath + "/child2";
 
-        publishClient.createNode(child2Path);
+        publishClient.createNode(child2Path, DEFAULT_NODE_TYPE);
         assertExists(publishClient, child2Path);
 
         distributeDeep(author, publishAgent, DistributionRequestType.ADD, nodePath);

@@ -20,6 +20,7 @@ package org.apache.sling.distribution.it;
 
 
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.testing.clients.ClientException;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -52,8 +53,6 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
         assertEquals(true, queues.get("endpoint1").get("empty"));
         assertNotNull(queues.get("endpoint2"));
         assertEquals(true, queues.get("endpoint2").get("empty"));
-
-
     }
 
     @Ignore
@@ -62,7 +61,6 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
 
         String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
         assertExists(authorClient, nodePath);
-
 
         // Add two items in both queues
         distribute(author, "queue-multiple", DistributionRequestType.ADD, nodePath);
@@ -154,7 +152,7 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
 
 
     @After
-    public void clean() throws IOException {
+    public void clean() throws IOException, ClientException {
         assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint1",
                 "operation", "delete", "limit", DELETE_LIMIT);
 

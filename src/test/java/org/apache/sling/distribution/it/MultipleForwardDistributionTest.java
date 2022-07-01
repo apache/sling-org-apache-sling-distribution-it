@@ -19,16 +19,14 @@
 package org.apache.sling.distribution.it;
 
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.testing.clients.ClientException;
+import org.codehaus.jackson.JsonNode;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
 
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-
-import static junit.framework.Assert.assertEquals;
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertPostResourceWithParameters;
@@ -37,6 +35,7 @@ import static org.apache.sling.distribution.it.DistributionUtils.distribute;
 import static org.apache.sling.distribution.it.DistributionUtils.doExport;
 import static org.apache.sling.distribution.it.DistributionUtils.getResource;
 import static org.apache.sling.distribution.it.DistributionUtils.queueUrl;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Integration test for forward distribution
@@ -44,7 +43,6 @@ import static org.apache.sling.distribution.it.DistributionUtils.queueUrl;
 public class MultipleForwardDistributionTest extends DistributionIntegrationTestBase {
 
     final static String DELETE_LIMIT = "100";
-
 
     @Test
     public void testAddContent() throws Exception {
@@ -71,36 +69,30 @@ public class MultipleForwardDistributionTest extends DistributionIntegrationTest
         assertExists(publishClient, nodePath);
 
         {
-            JsonObject json = getResource(author, queueUrl("publish-multiple") + "/passivequeue1");
+            JsonNode jsonNode = getResource(author, queueUrl("publish-multiple") + "/passivequeue1");
 
-            JsonArray queueItems = json.getJsonArray("items");
+            JsonNode queueItems = jsonNode.get("items");
             assertEquals(1, queueItems.size());
-            assertEquals(1, json.get("itemsCount"));
+            assertEquals(1, jsonNode.get("itemsCount"));
         }
-
 
         String content = doExport(author, "publish-multiple-passivequeue1", DistributionRequestType.PULL, null);
 
         {
-            JsonObject json = getResource(author, queueUrl("publish-multiple") + "/passivequeue1");
+            JsonNode jsonNode = getResource(author, queueUrl("publish-multiple") + "/passivequeue1");
 
-            JsonArray queueItems = json.getJsonArray("items");
+            JsonNode queueItems = jsonNode.get("items");
             assertEquals(0, queueItems.size());
-            assertEquals(0, json.get("itemsCount"));
+            assertEquals(0, jsonNode.get("itemsCount"));
         }
-
     }
 
-
-
     @After
-    public void clean() throws IOException {
+    public void clean() throws IOException, ClientException {
         assertPostResourceWithParameters(author, 200, queueUrl("publish-multiple") + "/endpoint1",
                 "operation", "delete", "limit", DELETE_LIMIT);
 
         assertPostResourceWithParameters(author, 200, queueUrl("publish-multiple") + "/endpoint2",
                 "operation", "delete", "limit", DELETE_LIMIT);
-
     }
-
 }

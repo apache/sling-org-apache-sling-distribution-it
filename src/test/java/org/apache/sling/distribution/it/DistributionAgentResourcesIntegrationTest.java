@@ -35,39 +35,30 @@ import static org.apache.sling.distribution.it.DistributionUtils.publishAgentCon
 import static org.apache.sling.distribution.it.DistributionUtils.queueUrl;
 
 /**
- * Integration test for {@link org.apache.sling.distribution.agent.DistributionAgent} resources
+ * Integration test for {@link org.apache.sling.distribution.agent.spi.DistributionAgent} resources
  */
 public class DistributionAgentResourcesIntegrationTest extends DistributionIntegrationTestBase {
 
+    private String[] defaultAuthorAgentNames = new String[]{"publish", "publish-reverse"};
+    private String[] defaultPublishAgentNames = new String[]{"reverse"};
+
     @Test
     public void testDefaultAgentConfigurationResourcesOnAuthor() throws Exception {
-        String[] defaultAgentNames = new String[]{
-                "publish",
-                "publish-reverse"
-        };
-        for (String agentName : defaultAgentNames) {
+        for (String agentName : defaultAuthorAgentNames) {
             assertExists(authorClient, authorAgentConfigUrl(agentName));
         }
-
     }
-
 
     @Test
     public void testDefaultAgentConfigurationResourcesOnPublish() throws Exception {
-        String[] defaultAgentNames = new String[]{
-                "reverse",
-        };
-        for (String agentName : defaultAgentNames) {
+        for (String agentName : defaultPublishAgentNames) {
             assertExists(publishClient, publishAgentConfigUrl(agentName));
         }
-
     }
 
     @Test
     public void testDefaultPublishAgentResources() throws Exception {
         // these agents do not exist as they are bundled to publish runMode
-        String[] defaultPublishAgentNames = new String[]{
-                "reverse"        };
         for (String agentName : defaultPublishAgentNames) {
             assertNotExists(authorClient, agentUrl(agentName));
         }
@@ -76,10 +67,6 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
     @Test
     public void testDefaultAuthorAgentResources() throws Exception {
         // these agents exist as they are bundled to author runMode
-        String[] defaultAuthorAgentNames = new String[]{
-                "publish",
-                "publish-reverse"
-        };
         for (String agentName : defaultAuthorAgentNames) {
             assertExists(authorClient, agentUrl(agentName));
         }
@@ -88,8 +75,6 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
     @Test
     public void testDefaultPublishAgentQueueResources() throws Exception {
         // these agent queues do not exist as they are bundled to publish runMode
-        String[] defaultPublishAgentNames = new String[]{
-                "reverse"        };
         for (String agentName : defaultPublishAgentNames) {
             assertNotExists(authorClient, queueUrl(agentName));
         }
@@ -98,22 +83,14 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
     @Test
     public void testDefaultAuthorAgentLogResources() throws Exception {
         // these agent queues exist as they are bundled to author runMode
-        String[] defaultAuthorAgentNames = new String[]{
-                "publish",
-                "publish-reverse"
-        };
         for (String agentName : defaultAuthorAgentNames) {
             assertExists(authorClient, logUrl(agentName));
         }
     }
 
-
-
     @Test
     public void testDefaultPublishAgentLogResources() throws Exception {
         // these agent queues do not exist as they are bundled to publish runMode
-        String[] defaultPublishAgentNames = new String[]{
-                "reverse"        };
         for (String agentName : defaultPublishAgentNames) {
             assertNotExists(authorClient, logUrl(agentName));
         }
@@ -122,10 +99,6 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
     @Test
     public void testDefaultAuthorAgentQueueResources() throws Exception {
         // these agent queues exist as they are bundled to author runMode
-        String[] defaultAuthorAgentNames = new String[]{
-                "publish",
-                "publish-reverse"
-        };
         for (String agentName : defaultAuthorAgentNames) {
             assertExists(authorClient, queueUrl(agentName));
         }
@@ -144,7 +117,8 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name", agentName, "type", "forward");
+        authorClient.createNode(newConfigResource, "name");
+        //authorClient.createNode(newConfigResource, "name", agentName, "type", "forward");
         assertExists(authorClient, newConfigResource);
         assertResponseContains(author, newConfigResource,
                 "sling:resourceType", "sling/distribution/setting",
@@ -155,7 +129,9 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
     public void testAgentConfigurationResourceDelete() throws Exception {
         String agentName = "sample-delete-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
-        authorClient.createNode(newConfigResource, "name", agentName, "type", "forward");
+
+        authorClient.createNode(newConfigResource, "name");
+        //authorClient.createNode(newConfigResource, "name", agentName, "type", "forward");
         assertExists(authorClient, newConfigResource);
 
         deleteNode(author, newConfigResource);
@@ -163,13 +139,13 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
     }
 
 
-
     @Test
     public void testAgentConfigurationResourceExtended() throws Exception {
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name", agentName, "type", "forward", "etc.enabled", "true");
+        authorClient.createNode(newConfigResource, "name");
+        //authorClient.createNode(newConfigResource, "name", agentName, "type", "forward", "etc.enabled", "true");
         assertExists(authorClient, newConfigResource);
         assertExists(authorClient, "/etc/distribution/" + agentName);
         assertResponseContains(author, newConfigResource,
@@ -188,9 +164,10 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name", agentName);
+        authorClient.createNode(newConfigResource, "name");
+        //authorClient.createNode(newConfigResource, "name", agentName);
         assertExists(authorClient, newConfigResource);
-        authorClient.setProperties(newConfigResource, "packageExporter", "exporters/remote/updated");
+        authorClient.setPropertyString(newConfigResource, "packageExporter", "exporters/remote/updated");
         assertResponseContains(author, newConfigResource,
                 "sling:resourceType", "sling/distribution/setting/agent",
                 "name", agentName,

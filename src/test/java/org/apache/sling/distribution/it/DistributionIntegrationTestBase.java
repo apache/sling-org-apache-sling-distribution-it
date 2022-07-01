@@ -22,9 +22,11 @@ import java.io.IOException;
 
 import javax.json.JsonException;
 
-import org.apache.sling.testing.tools.sling.SlingClient;
-import org.apache.sling.testing.tools.sling.SlingInstance;
-import org.apache.sling.testing.tools.sling.SlingInstanceManager;
+import org.apache.sling.testing.clients.ClientException;
+import org.apache.sling.testing.clients.SlingClient;
+import org.apache.sling.testing.serversetup.instance.SlingInstance;
+import org.apache.sling.testing.serversetup.instance.SlingInstanceState;
+import org.apache.sling.testing.serversetup.instance.SlingTestBase;
 import org.junit.After;
 
 import static org.apache.sling.distribution.it.DistributionUtils.agentUrl;
@@ -46,46 +48,40 @@ public abstract class DistributionIntegrationTestBase {
     protected SlingClient authorClient;
     protected SlingClient publishClient;
 
-    static SlingInstanceManager slingInstancesManager = null;
-    static SlingInstanceManager sharedSlingInstancesManager = null;
-
     protected DistributionIntegrationTestBase() {
         this(false);
     }
 
     protected DistributionIntegrationTestBase(boolean useShared) {
-        init(useShared);
+        try {
+            init(useShared);
+        } catch (ClientException e) {
+            e.printStackTrace();
+        }
     }
 
-
-    synchronized void init(boolean useShared) {
+    synchronized void init(boolean useShared) throws ClientException {
 
         if (useShared) {
-            if (sharedSlingInstancesManager == null) {
-                sharedSlingInstancesManager = new SlingInstanceManager("author-shared", "publish-shared") ;
+            System.setProperty("test.server.url", System.getProperty("launchpad.http.server.url.author.shared"));
+            author = new SlingTestBase(SlingInstanceState.getInstance("author-shared"), System.getProperties());
 
-            }
-            author = sharedSlingInstancesManager.getInstance("author-shared");
-            publish = sharedSlingInstancesManager.getInstance("publish-shared");
+            System.setProperty("test.server.url", System.getProperty("launchpad.http.server.url.publish.shared"));
+            publish = new SlingTestBase(SlingInstanceState.getInstance("publish-shared"), System.getProperties());
 
         } else {
-            if (slingInstancesManager == null) {
-                slingInstancesManager = new SlingInstanceManager("author", "publish");
+            System.setProperty("test.server.url", System.getProperty("launchpad.http.server.url.author"));
+            author = new SlingTestBase(SlingInstanceState.getInstance("author"), System.getProperties());
 
-            }
-
-            author = slingInstancesManager.getInstance("author");
-            publish = slingInstancesManager.getInstance("publish");
+            System.setProperty("test.server.url", System.getProperty("launchpad.http.server.url.publish"));
+            publish = new SlingTestBase(SlingInstanceState.getInstance("publish"), System.getProperties());
         }
-
-        authorClient = new SlingClient(author.getServerBaseUrl(), author.getServerUsername(), author.getServerPassword());
-        publishClient = new SlingClient(publish.getServerBaseUrl(), publish.getServerUsername(), publish.getServerPassword());
+        authorClient = author.getSlingClient();
+        publishClient = publish.getSlingClient();
 
         try {
 
             String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
-
-
 
             registerPublish("publish", "default");
             registerPublish("impersonate-publish", "default");
@@ -98,17 +94,13 @@ public abstract class DistributionIntegrationTestBase {
                 setArrayProperties(author, authorAgentConfigUrl("publish-multiple"),
                         "packageImporter.endpoints", "endpoint1=" + remoteImporterUrl, "endpoint2=" + remoteImporterUrl + "badaddress");
 
-
                 Thread.sleep(1000);
-
                 assertExists(authorClient, agentUrl("publish-multiple"));
                 assertExists(authorClient, exporterUrl("publish-multiple-passivequeue1"));
-
             }
 
             {
                 assertExists(authorClient, authorAgentConfigUrl("publish-selective"));
-
                 setArrayProperties(author, authorAgentConfigUrl("publish-selective"),
                         "packageImporter.endpoints", "publisher1=" + remoteImporterUrl);
 
@@ -116,18 +108,13 @@ public abstract class DistributionIntegrationTestBase {
                 assertExists(authorClient, agentUrl("publish-selective"));
             }
 
-
-
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-
     }
 
-
     @After
-    public void checkNoPackagesLeft() throws IOException, JsonException, InterruptedException {
-
+    public void checkNoPackagesLeft() throws IOException, JsonException, InterruptedException, ClientException {
         Thread.sleep(5000);
 
         assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/shared");
@@ -141,14 +128,9 @@ public abstract class DistributionIntegrationTestBase {
 
     public void registerPublish(String publishAgent, String remoteImporter) throws Exception {
         String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl(remoteImporter);
-
-
         assertExists(authorClient, authorAgentConfigUrl(publishAgent));
 
-        authorClient.setProperties(authorAgentConfigUrl(publishAgent),
-                "packageImporter.endpoints", remoteImporterUrl);
-
-
+        authorClient.setPropertyString(authorAgentConfigUrl(publishAgent),"packageImporter.endpoints", remoteImporterUrl);
         Thread.sleep(1000);
 
         assertExists(authorClient, agentUrl(publishAgent));
@@ -159,13 +141,10 @@ public abstract class DistributionIntegrationTestBase {
         String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl(remoteExporter);
 
         assertExists(authorClient, authorAgentConfigUrl(reverseAgent));
-
-        authorClient.setProperties(authorAgentConfigUrl(reverseAgent), "packageExporter.endpoints", remoteExporterUrl);
+        authorClient.setPropertyString(authorAgentConfigUrl(reverseAgent), "packageExporter.endpoints", remoteExporterUrl);
 
         Thread.sleep(1000);
         assertExists(authorClient, agentUrl(reverseAgent));
         assertExists(publishClient, exporterUrl(remoteExporter));
     }
-
-
 }

@@ -22,12 +22,17 @@ import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.distributeDeep;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.testing.clients.ClientException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -43,7 +48,7 @@ public class ForwardBinaryDistributionTest extends DistributionIntegrationTestBa
         });
     }
 
-	public ForwardBinaryDistributionTest(boolean useSharedDatastore) {
+	public ForwardBinaryDistributionTest(boolean useSharedDatastore) throws ClientException {
         // use instances with shared datastore
 		super(useSharedDatastore);
 	}
@@ -54,7 +59,14 @@ public class ForwardBinaryDistributionTest extends DistributionIntegrationTestBa
         new Random().nextBytes(bytes);
 		InputStream data = new ByteArrayInputStream(bytes);
 		String nodePath = "/content/asset.txt";
-		authorClient.upload(nodePath, data, -1, true);
+
+		File file = new File("asset.txt");
+		OutputStream outStream = new FileOutputStream(file);
+		outStream.write(bytes);
+		outStream.close();
+
+		authorClient.upload(file, "application/octet-stream", nodePath, true);
+		//authorClient.upload(nodePath, data, -1, true);
 
 		assertExists(authorClient, nodePath);
         distributeDeep(author, "publish", DistributionRequestType.ADD, nodePath);

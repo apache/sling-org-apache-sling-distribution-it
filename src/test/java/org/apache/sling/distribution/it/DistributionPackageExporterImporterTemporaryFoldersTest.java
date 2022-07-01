@@ -50,7 +50,7 @@ public class DistributionPackageExporterImporterTemporaryFoldersTest extends Dis
         jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/packages/tempvlt/data");
         assertEquals(1, jcrPackages.size());
 
-        publishClient.delete(nodePath);
+        publishClient.deletePath(nodePath);
         assertNotExists(publishClient, nodePath);
 
         String content = doExport(publish, "temp", DistributionRequestType.PULL);

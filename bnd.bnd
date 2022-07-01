@@ -1,0 +1,9 @@
+Bundle-SymbolicName:\
+    org.apache.sling.distribution.it
+
+Sling-Initial-Content:\
+    SLING-CONTENT/content/test;path:=/content/test;overwrite:=true,\
+    SLING-CONTENT/libs/test;path:=/libs/test;overwrite:=true
+
+Export-Package:\
+    org.apache.sling.distribution.it
