@@ -21,10 +21,3 @@
 
 [artifacts]
     org.apache.sling/org.apache.sling.starter/11/slingstart
-
-[configurations runModes=shared]
-    org.apache.jackrabbit.oak.plugins.blob.datastore.FileDataStore
-        minRecordLength="4096"
-        path="../datastore"
-    org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
-        customBlobStore="true"

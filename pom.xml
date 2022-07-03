@@ -55,7 +55,7 @@
         <keepJarRunning>false</keepJarRunning>
         
         <!-- Change this to run selected tests only -->
-        <tests.to.run>**/SelectiveForwardDistributionTest.java</tests.to.run>
+        <tests.to.run>**/**.java</tests.to.run>
     </properties>
 
     <scm>
@@ -101,7 +101,6 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>slingstart-maven-plugin</artifactId>
-                <version>1.9.12</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -135,6 +134,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <attachArtifact>true</attachArtifact>
                     <usePomDependencies>true</usePomDependencies>
                     <servers>
                         <server>
@@ -188,7 +188,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <debugForkedProcess>${maven.surefire.debug}</debugForkedProcess>
                     <includes>
                         <include>${tests.to.run}</include>
                     </includes>
@@ -200,6 +199,10 @@
                         <launchpad.http.server.url.publish>http://localhost:${publish.http.port}</launchpad.http.server.url.publish>
                         <launchpad.http.server.url.author.shared>http://localhost:${author-shared.http.port}</launchpad.http.server.url.author.shared>
                         <launchpad.http.server.url.publish.shared>http://localhost:${publish-shared.http.port}</launchpad.http.server.url.publish.shared>
+
+                        <!-- Define additional bundles to install -->
+                        <!--<additional.bundles.path>${project.build.directory}</additional.bundles.path>
+                        <sling.additional.bundle.1>${project.build.finalName}.jar</sling.additional.bundle.1>-->
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -215,12 +218,6 @@
             <scope>provided</scope>
         </dependency>
         <!-- OSGi Dependencies -->
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.framework</artifactId>
-            <version>1.8.0</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.service.component.annotations</artifactId>
@@ -266,23 +263,11 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Distribution module dependencies-->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.distribution.api</artifactId>
-            <version>0.7.0</version>
-            <scope>provided</scope>
-        </dependency>
+        <!-- Distribution module dependencies -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.core</artifactId>
             <version>0.5.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.distribution.sample</artifactId>
-            <version>0.1.7-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
