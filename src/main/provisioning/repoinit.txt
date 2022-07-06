@@ -16,19 +16,16 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-# The feature for Sling Content Distribution
-[feature name=content-distribution]
+[feature name=repoinit]
 
-[artifacts startLevel=20]
-    org.apache.jackrabbit.vault/org.apache.jackrabbit.vault/3.6.0
-    org.apache.felix/org.apache.felix.healthcheck.api/2.0.0
-    org.apache.sling/org.apache.sling.distribution.api/0.7.0
-    org.apache.sling/org.apache.sling.distribution.core/0.5.0
-    org.apache.sling/org.apache.sling.distribution.sample/0.1.7-SNAPSHOT
+[:repoinit]
 
-[configurations runModes=shared]
-    org.apache.jackrabbit.oak.plugins.blob.datastore.FileDataStore
-        minRecordLength="4096"
-        path="../datastore"
-    org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
-        customBlobStore="true"
+    create path (sling:Folder)  /libs/sling/distribution/services
+    create path (sling:Folder)  /libs/sling/distribution/settings
+    create path (sling:Folder)  /etc/distribution
+    create path (sling:Folder)  /etc/packages/sling/distribution
+    create path (sling:Folder)  /var/sling/distribution/packages
+    create path (sling:Folder)  /var/sling/distribution/packages/default/data
+    create path (slingFolder)   /var/sling/distribution/packages/default/shared
+    create path (sling:Folder)  /libs/sling/distribution/services/importers/default
+    create path (sling:Folder)  /var/sling/distribution/jcrpackages

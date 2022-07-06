@@ -78,7 +78,8 @@ public class DistributionUtils {
             urlEncodedFormEntity = new UrlEncodedFormEntity(new ArrayList<>());
         }
 
-        SlingHttpResponse slingHttpResponse = slingInstance.getSlingClient().doPost(path, urlEncodedFormEntity, status);
+        SlingClient slingClient =  new SlingClient(slingInstance.getSlingClient().getUrl(), DISTRIBUTOR_USER, DISTRIBUTOR_PASSWORD);
+        SlingHttpResponse slingHttpResponse = slingClient.doPost(path, urlEncodedFormEntity, status);
         return slingHttpResponse.getContent();
     }
 

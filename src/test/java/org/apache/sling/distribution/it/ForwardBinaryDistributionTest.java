@@ -21,16 +21,13 @@ package org.apache.sling.distribution.it;
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.distributeDeep;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.testing.clients.ClientException;
 import org.junit.Test;
@@ -57,7 +54,6 @@ public class ForwardBinaryDistributionTest extends DistributionIntegrationTestBa
 	public void testBinaryDistribution() throws Exception {
         byte[] bytes = new byte[6000];
         new Random().nextBytes(bytes);
-		InputStream data = new ByteArrayInputStream(bytes);
 		String nodePath = "/content/asset.txt";
 
 		File file = new File("asset.txt");
@@ -65,8 +61,7 @@ public class ForwardBinaryDistributionTest extends DistributionIntegrationTestBa
 		outStream.write(bytes);
 		outStream.close();
 
-		authorClient.upload(file, "application/octet-stream", nodePath, true);
-		//authorClient.upload(nodePath, data, -1, true);
+		authorClient.upload(file, "application/octet-stream", nodePath, true, 200);
 
 		assertExists(authorClient, nodePath);
         distributeDeep(author, "publish", DistributionRequestType.ADD, nodePath);

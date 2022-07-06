@@ -48,6 +48,8 @@ public abstract class DistributionIntegrationTestBase {
     protected SlingClient authorClient;
     protected SlingClient publishClient;
 
+    public static final String DISTRIBUTOR_USER = "testDistributorUser";
+
     protected DistributionIntegrationTestBase() {
         this(false);
     }
@@ -61,7 +63,6 @@ public abstract class DistributionIntegrationTestBase {
     }
 
     synchronized void init(boolean useShared) throws ClientException {
-
         if (useShared) {
             System.setProperty("test.server.url", System.getProperty("launchpad.http.server.url.author.shared"));
             author = new SlingTestBase(SlingInstanceState.getInstance("author-shared"), System.getProperties());
@@ -121,8 +122,8 @@ public abstract class DistributionIntegrationTestBase {
         assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/data");
         assertEmptyFolder(author, authorClient, "/etc/packages/sling/distribution");
 
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/shared");
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/data");
+        assertEmptyFolder(publish, publishClient, "/var/sling/distribution/packages/default/shared");
+        assertEmptyFolder(publish, publishClient, "/var/sling/distribution/packages/default/data");
         assertEmptyFolder(publish, publishClient, "/etc/packages/sling/distribution");
     }
 

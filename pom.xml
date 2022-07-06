@@ -52,10 +52,10 @@
         <sling.java.version>8</sling.java.version>
 
         <!-- Set this to run tests against an existing server instance or inspect the server after ITs -->
-        <keepJarRunning>false</keepJarRunning>
+        <keepJarRunning>true</keepJarRunning>
         
         <!-- Change this to run selected tests only -->
-        <tests.to.run>**/**.java</tests.to.run>
+        <tests.to.run>**/SelectiveForwardDistributionTest.java</tests.to.run>
     </properties>
 
     <scm>
@@ -70,6 +70,11 @@
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>asset.txt</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -141,13 +146,14 @@
                             <id>author</id>
                             <port>${author.http.port}</port>
                             <runmode>author,notshared</runmode>
+                            <debug>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=7654</debug>
                         </server>
                         <server>
                             <id>publish</id>
                             <port>${publish.http.port}</port>
                             <runmode>publish,notshared</runmode>
                         </server>
-                        <server>
+                        <!--<server>
                             <id>author-shared</id>
                             <port>${author-shared.http.port}</port>
                             <runmode>author,shared</runmode>
@@ -156,7 +162,7 @@
                             <id>publish-shared</id>
                             <port>${publish-shared.http.port}</port>
                             <runmode>author,shared</runmode>
-                        </server>
+                        </server>-->
                     </servers>
                 </configuration>
             </plugin>

@@ -18,15 +18,19 @@
  */
 package org.apache.sling.distribution.it;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-import org.junit.Ignore;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.junit.Test;
 
 import static org.apache.sling.distribution.it.DistributionUtils.agentRootUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.agentUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
+import static org.apache.sling.distribution.it.DistributionUtils.assertPostResourceWithParameters;
 import static org.apache.sling.distribution.it.DistributionUtils.assertResponseContains;
 import static org.apache.sling.distribution.it.DistributionUtils.authorAgentConfigUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.deleteNode;
@@ -117,8 +121,7 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name");
-        //authorClient.createNode(newConfigResource, "name", agentName, "type", "forward");
+        assertPostResourceWithParameters(author, 201, newConfigResource, "name", agentName, "type", "forward");
         assertExists(authorClient, newConfigResource);
         assertResponseContains(author, newConfigResource,
                 "sling:resourceType", "sling/distribution/setting",
@@ -130,8 +133,7 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
         String agentName = "sample-delete-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name");
-        //authorClient.createNode(newConfigResource, "name", agentName, "type", "forward");
+        assertPostResourceWithParameters(author, 201, newConfigResource, "name", agentName, "type", "forward");
         assertExists(authorClient, newConfigResource);
 
         deleteNode(author, newConfigResource);
@@ -144,8 +146,13 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name");
-        //authorClient.createNode(newConfigResource, "name", agentName, "type", "forward", "etc.enabled", "true");
+        List<NameValuePair> properties = new ArrayList<>();
+        properties.add(new BasicNameValuePair("name", agentName));
+        properties.add(new BasicNameValuePair("type", "forward"));
+        properties.add(new BasicNameValuePair("etc.enabled", "true"));
+
+        assertPostResourceWithParameters(author, 201, newConfigResource, "name", agentName, "type", "forward", "etc.enabled", "true");
+
         assertExists(authorClient, newConfigResource);
         assertExists(authorClient, "/etc/distribution/" + agentName);
         assertResponseContains(author, newConfigResource,
@@ -157,21 +164,18 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
         assertNotExists(authorClient, "/etc/distribution/" + agentName);
     }
 
-
     @Test
-    @Ignore
     public void testAgentConfigurationResourceUpdate() throws Exception {
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
 
-        authorClient.createNode(newConfigResource, "name");
-        //authorClient.createNode(newConfigResource, "name", agentName);
+        assertPostResourceWithParameters(author, 201, newConfigResource, "name", agentName, "type", "forward");
         assertExists(authorClient, newConfigResource);
         authorClient.setPropertyString(newConfigResource, "packageExporter", "exporters/remote/updated");
         assertResponseContains(author, newConfigResource,
-                "sling:resourceType", "sling/distribution/setting/agent",
+                "sling:resourceType", "sling/distribution/setting",
                 "name", agentName,
-                "packageExporter", "updated");
+                "packageExporter", "exporters/remote/updated");
     }
 
 }

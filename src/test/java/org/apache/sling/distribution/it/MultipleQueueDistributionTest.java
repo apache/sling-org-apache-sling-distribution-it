@@ -77,7 +77,7 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
         assertEquals(2, queues.get("endpoint2").get("itemsCount"));
         assertEquals(2, firstQueueItems.size());
         assertEquals("ADD", firstQueueItems.get(0).get("action"));
-        assertEquals(DistributionUtils.DISTRIBUTOR_USER, firstQueueItems.get(0).get("userid"));
+        assertEquals(DISTRIBUTOR_USER, firstQueueItems.get(0).get("userid"));
         assertEquals("DELETE", firstQueueItems.get(1).get("action"));
         assertEquals(2, secondQueueItems.size());
         assertEquals("ADD", secondQueueItems.get(0).get("action"));
