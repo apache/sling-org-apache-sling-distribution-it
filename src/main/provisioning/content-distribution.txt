@@ -20,7 +20,7 @@
 [feature name=content-distribution]
 
 [artifacts startLevel=20]
-    org.apache.jackrabbit.vault/org.apache.jackrabbit.vault/3.6.0
+    org.apache.jackrabbit.vault/org.apache.jackrabbit.vault/3.4.0
     org.apache.felix/org.apache.felix.healthcheck.api/2.0.0
     org.apache.sling/org.apache.sling.distribution.api/0.7.0
     org.apache.sling/org.apache.sling.distribution.core/0.5.0
