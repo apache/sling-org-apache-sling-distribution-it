@@ -52,10 +52,10 @@
         <sling.java.version>8</sling.java.version>
 
         <!-- Set this to run tests against an existing server instance or inspect the server after ITs -->
-        <keepJarRunning>true</keepJarRunning>
+        <keepJarRunning>false</keepJarRunning>
         
         <!-- Change this to run selected tests only -->
-        <tests.to.run>**/SelectiveForwardDistributionTest.java</tests.to.run>
+        <tests.to.run>**/**Test.java</tests.to.run>
     </properties>
 
     <scm>
@@ -146,14 +146,13 @@
                             <id>author</id>
                             <port>${author.http.port}</port>
                             <runmode>author,notshared</runmode>
-                            <debug>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=7654</debug>
                         </server>
                         <server>
                             <id>publish</id>
                             <port>${publish.http.port}</port>
                             <runmode>publish,notshared</runmode>
                         </server>
-                        <!--<server>
+                        <server>
                             <id>author-shared</id>
                             <port>${author-shared.http.port}</port>
                             <runmode>author,shared</runmode>
@@ -161,8 +160,8 @@
                         <server>
                             <id>publish-shared</id>
                             <port>${publish-shared.http.port}</port>
-                            <runmode>author,shared</runmode>
-                        </server>-->
+                            <runmode>publish,shared</runmode>
+                        </server>
                     </servers>
                 </configuration>
             </plugin>
@@ -250,12 +249,6 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.rules</artifactId>
             <version>2.0.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.junit.teleporter</artifactId>
-            <version>1.0.22</version>
             <scope>test</scope>
         </dependency>
         <dependency>
