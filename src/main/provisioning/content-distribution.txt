@@ -32,3 +32,9 @@
         path="../datastore"
     org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
         customBlobStore="true"
+
+[configurations]
+    org.apache.sling.jcr.resource.internal.JcrSystemUserValidator
+        allow.only.system.user="false"
+    org.apache.sling.jcr.base.internal.LoginAdminWhitelist
+        whitelist.bypass="true"
