@@ -21,3 +21,13 @@
 
 [artifacts]
     org.apache.sling/org.apache.sling.starter/11/slingstart
+
+[configurations]
+    org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-jcr-resource
+      user.mapping=[
+        "org.apache.sling.jcr.resource:validation\=sling-readall"
+      ]
+    org.apache.sling.serviceusermapping.impl.ServiceUserMapperImpl.amended-observation
+      user.mapping=[
+        "org.apache.sling.jcr.resource:observation\=sling-readall"
+      ]
