@@ -33,8 +33,14 @@
     org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStoreService
         customBlobStore="true"
 
-[configurations]
-    org.apache.sling.jcr.resource.internal.JcrSystemUserValidator
-        allow.only.system.user="false"
-    org.apache.sling.jcr.base.internal.LoginAdminWhitelist
-        whitelist.bypass="true"
+[:repoinit]
+
+    create path (sling:Folder)  /libs/sling/distribution/services
+    create path (sling:Folder)  /libs/sling/distribution/settings
+    create path (sling:Folder)  /etc/distribution
+    create path (sling:Folder)  /etc/packages/sling/distribution
+    create path (sling:Folder)  /var/sling/distribution/packages
+    create path (sling:Folder)  /var/sling/distribution/packages/default/data
+    create path (slingFolder)   /var/sling/distribution/packages/default/shared
+    create path (sling:Folder)  /libs/sling/distribution/services/importers/default
+    create path (sling:Folder)  /var/sling/distribution/jcrpackages
