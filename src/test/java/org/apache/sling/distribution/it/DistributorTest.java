@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.it;
 
 import org.apache.sling.distribution.DistributionRequestType;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
@@ -28,6 +29,7 @@ import static org.apache.sling.distribution.it.DistributionUtils.createRandomNod
 public class DistributorTest extends DistributionIntegrationTestBase {
 
     @Test
+    @Ignore
     public void testAddContent() throws Exception {
         String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
         assertExists(authorClient, nodePath);
