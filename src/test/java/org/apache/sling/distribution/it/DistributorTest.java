@@ -32,7 +32,7 @@ public class DistributorTest extends DistributionIntegrationTestBase {
         String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
         assertExists(authorClient, nodePath);
 
-        assertPostResourceWithParameters(author, 200, "/bin/test/distributor", "agent", "publish",
+        assertPostResourceWithParameters(author, 201, "/bin/test/distributor", "agent", "publish",
                 "path", nodePath, "action", DistributionRequestType.ADD.name());
         assertExists(publishClient, nodePath);
     }

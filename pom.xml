@@ -139,7 +139,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <attachArtifact>false</attachArtifact>
                     <usePomDependencies>true</usePomDependencies>
                     <servers>
                         <server>
