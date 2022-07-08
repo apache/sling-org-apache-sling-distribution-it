@@ -197,7 +197,7 @@
                     </includes>
                     <systemPropertyVariables>
                         <launchpad.http.server.url>http://localhost:${author.http.port}</launchpad.http.server.url>
-                        <server.ready.timeout.seconds>120</server.ready.timeout.seconds>
+                        <server.ready.timeout.seconds>180</server.ready.timeout.seconds>
 
                         <launchpad.http.server.url.author>http://localhost:${author.http.port}</launchpad.http.server.url.author>
                         <launchpad.http.server.url.publish>http://localhost:${publish.http.port}</launchpad.http.server.url.publish>
