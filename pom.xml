@@ -49,8 +49,6 @@
     optionally using -Dmaven.surefire.debug to enable debugging.
     -->
     <properties>
-        <sling.java.version>8</sling.java.version>
-
         <!-- Set this to run tests against an existing server instance or inspect the server after ITs -->
         <keepJarRunning>false</keepJarRunning>
 
@@ -145,25 +143,25 @@
                             <id>author</id>
                             <port>${author.http.port}</port>
                             <runmode>author,notshared</runmode>
-                            <vmOpts>-Xmx2048m -XX:MaxPermSize=256m -Djava.awt.headless=true</vmOpts>
+                            <vmOpts>-Xmx2048m -XX:MaxPermSize=512m -Djava.awt.headless=true</vmOpts>
                         </server>
                         <server>
                             <id>publish</id>
                             <port>${publish.http.port}</port>
                             <runmode>publish,notshared</runmode>
-                            <vmOpts>-Xmx2048m -XX:MaxPermSize=256m -Djava.awt.headless=true</vmOpts>
+                            <vmOpts>-Xmx2048m -XX:MaxPermSize=512m -Djava.awt.headless=true</vmOpts>
                         </server>
                         <server>
                             <id>author-shared</id>
                             <port>${author-shared.http.port}</port>
                             <runmode>author,shared</runmode>
-                            <vmOpts>-Xmx2048m -XX:MaxPermSize=256m -Djava.awt.headless=true</vmOpts>
+                            <vmOpts>-Xmx2048m -XX:MaxPermSize=512m -Djava.awt.headless=true</vmOpts>
                         </server>
                         <server>
                             <id>publish-shared</id>
                             <port>${publish-shared.http.port}</port>
                             <runmode>publish,shared</runmode>
-                            <vmOpts>-Xmx2048m -XX:MaxPermSize=256m -Djava.awt.headless=true</vmOpts>
+                            <vmOpts>-Xmx2048m -XX:MaxPermSize=512m -Djava.awt.headless=true</vmOpts>
                         </server>
                     </servers>
                 </configuration>
