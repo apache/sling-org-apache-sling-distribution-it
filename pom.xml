@@ -143,25 +143,21 @@
                             <id>author</id>
                             <port>${author.http.port}</port>
                             <runmode>author,notshared</runmode>
-                            <vmOpts>-Xmx2048m -XX:MaxPermSize=256m -Djava.awt.headless=true</vmOpts>
                         </server>
                         <server>
                             <id>publish</id>
                             <port>${publish.http.port}</port>
                             <runmode>publish,notshared</runmode>
-                            <vmOpts>-Xmx2048m -XX:MaxPermSize=256m -Djava.awt.headless=true</vmOpts>
                         </server>
                         <server>
                             <id>author-shared</id>
                             <port>${author-shared.http.port}</port>
                             <runmode>author,shared</runmode>
-                            <vmOpts>-Xmx2048m -XX:MaxPermSize=256m -Djava.awt.headless=true</vmOpts>
                         </server>
                         <server>
                             <id>publish-shared</id>
                             <port>${publish-shared.http.port}</port>
                             <runmode>publish,shared</runmode>
-                            <vmOpts>-Xmx2048m -XX:MaxPermSize=256m -Djava.awt.headless=true</vmOpts>
                         </server>
                     </servers>
                 </configuration>

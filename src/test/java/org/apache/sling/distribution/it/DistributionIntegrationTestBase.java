@@ -118,13 +118,13 @@ public abstract class DistributionIntegrationTestBase {
     public void checkNoPackagesLeft() throws IOException, JsonException, InterruptedException, ClientException {
         Thread.sleep(7000);
 
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/shared");
-        assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/data");
-        assertEmptyFolder(author, authorClient, "/etc/packages/sling/distribution");
+        assertEmptyFolder(author, "/var/sling/distribution/packages/default/shared");
+        assertEmptyFolder(author, "/var/sling/distribution/packages/default/data");
+        assertEmptyFolder(author, "/etc/packages/sling/distribution");
 
-        assertEmptyFolder(publish, publishClient, "/var/sling/distribution/packages/default/shared");
-        assertEmptyFolder(publish, publishClient, "/var/sling/distribution/packages/default/data");
-        assertEmptyFolder(publish, publishClient, "/etc/packages/sling/distribution");
+        assertEmptyFolder(publish, "/var/sling/distribution/packages/default/shared");
+        assertEmptyFolder(publish, "/var/sling/distribution/packages/default/data");
+        assertEmptyFolder(publish, "/etc/packages/sling/distribution");
     }
 
     public void registerPublish(String publishAgent, String remoteImporter) throws Exception {

@@ -264,10 +264,13 @@ public class DistributionUtils {
         return triggerRootUrl() + "/" + triggerName + ".event";
     }
 
-    public static void assertEmptyFolder(SlingInstance instance, SlingClient client, String path) throws IOException, JsonException, ClientException {
-        if (client.exists(path)) {
+    public static void assertEmptyFolder(SlingInstance instance, String path) throws IOException, JsonException, ClientException, InterruptedException {
+        if (instance.getSlingClient().exists(path)) {
+            int retries = 100;
+            while (getChildrenForFolder(instance, path).size() > 0 && retries-- > 0) {
+                Thread.sleep(1000);
+            }
             List<String> children = getChildrenForFolder(instance, path);
-
             assertEquals(0, children.size());
         }
     }
