@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import javax.json.JsonException;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
@@ -38,7 +39,7 @@ import org.apache.sling.testing.clients.ClientException;
 import org.apache.sling.testing.clients.SlingClient;
 import org.apache.sling.testing.clients.SlingHttpResponse;
 import org.apache.sling.testing.serversetup.instance.SlingInstance;
-import org.codehaus.jackson.JsonNode;
+
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -274,7 +275,7 @@ public class DistributionUtils {
     public static List<String> getChildrenForFolder(SlingInstance instance, String path) throws IOException, JsonException, ClientException {
         List<String> result = new ArrayList<>();
         JsonNode authorJson = getResource(instance, path + ".1.json");
-        Iterator<String> it = authorJson.getFieldNames();
+        Iterator<String> it = authorJson.fieldNames();
         while (it.hasNext()) {
             String key = it.next();
 
@@ -292,13 +293,13 @@ public class DistributionUtils {
         JsonNode items = jsonNode.get("items");
 
         for(int i=0; i < items.size(); i++) {
-            String queueName = items.get(i).getTextValue();
+            String queueName = items.get(i).textValue();
 
             Map<String, Object> queueProperties = new HashMap<>();
 
             JsonNode queue = jsonNode.get(queueName);
-            queueProperties.put("empty", queue.get("empty").getBooleanValue());
-            queueProperties.put("itemsCount", queue.get("itemsCount").getIntValue());
+            queueProperties.put("empty", queue.get("empty").booleanValue());
+            queueProperties.put("itemsCount", queue.get("itemsCount").intValue());
 
             result.put(queueName, queueProperties);
         }
@@ -311,7 +312,7 @@ public class DistributionUtils {
 
         JsonNode jsonNode = getResource(instance, queueUrl + ".infinity");
 
-        Iterator<String> keys = jsonNode.getFieldNames();
+        Iterator<String> keys = jsonNode.fieldNames();
         while (keys.hasNext()) {
             String key = keys.next();
             JsonNode queueItem = jsonNode.get(key);
@@ -320,7 +321,7 @@ public class DistributionUtils {
 
                 Map<String, Object> itemProperties = new HashMap<>();
 
-                itemProperties.put("id", queueItem.get("id").getTextValue());
+                itemProperties.put("id", queueItem.get("id").textValue());
                 /*itemProperties.put("paths", JsonUtil.unbox(queueItem.get("paths")));
                 itemProperties.put("action", JsonUtil.unbox(queueItem.get("action")));
                 itemProperties.put("userid", JsonUtil.unbox(queueItem.get("userid")));

@@ -18,9 +18,9 @@
  */
 package org.apache.sling.distribution.it;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.testing.clients.ClientException;
-import org.codehaus.jackson.JsonNode;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
