@@ -53,7 +53,7 @@
 
         <!-- Set this to run tests against an existing server instance or inspect the server after ITs -->
         <keepJarRunning>false</keepJarRunning>
-        
+
         <!-- Change this to run selected tests only -->
         <tests.to.run>**/**Test.java</tests.to.run>
     </properties>
@@ -259,6 +259,11 @@
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+            <version>1.9.13</version>
         </dependency>
 
         <!-- Distribution module dependencies -->
