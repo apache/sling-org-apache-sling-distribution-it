@@ -146,11 +146,6 @@ public class DistributionAgentResourcesIntegrationTest extends DistributionInteg
         String agentName = "sample-create-config" + UUID.randomUUID();
         String newConfigResource = authorAgentConfigUrl(agentName);
 
-        List<NameValuePair> properties = new ArrayList<>();
-        properties.add(new BasicNameValuePair("name", agentName));
-        properties.add(new BasicNameValuePair("type", "forward"));
-        properties.add(new BasicNameValuePair("etc.enabled", "true"));
-
         assertPostResourceWithParameters(author, 201, newConfigResource, "name", agentName, "type", "forward", "etc.enabled", "true");
 
         assertExists(authorClient, newConfigResource);

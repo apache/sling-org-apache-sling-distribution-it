@@ -315,21 +315,8 @@ public class DistributionUtils {
         while (keys.hasNext()) {
             String key = keys.next();
             JsonNode queueItem = jsonNode.get(key);
-            /*if (item instanceof JsonObject)
-            {
-                queueItem = (JsonObject) item;
-            }
-            else if (item instanceof JsonString) {
-                try {
-                    queueItem = Json.createReader(new StringReader(((JsonString) item).getString())).readObject();
-                } catch (JsonException ex) {
-                    queueItem = null;
-                }
-            }
-            else {
-                queueItem = null;
-            }*/
-            if (queueItem != null /* && queueItem.containsKey("id")*/) {
+
+            if (queueItem != null && queueItem.has("id")) {
 
                 Map<String, Object> itemProperties = new HashMap<>();
 
