@@ -116,7 +116,7 @@ public abstract class DistributionIntegrationTestBase {
 
     @After
     public void checkNoPackagesLeft() throws IOException, JsonException, InterruptedException, ClientException {
-        Thread.sleep(5000);
+        Thread.sleep(7000);
 
         assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/shared");
         assertEmptyFolder(author, authorClient, "/var/sling/distribution/packages/default/data");
