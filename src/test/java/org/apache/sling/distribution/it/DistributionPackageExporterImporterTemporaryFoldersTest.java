@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static org.apache.sling.distribution.it.DistributionUtils.assertEmptyFolder;
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
 import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
@@ -34,8 +35,6 @@ import static org.apache.sling.distribution.it.DistributionUtils.getChildrenForF
 import static org.junit.Assert.assertEquals;
 
 public class DistributionPackageExporterImporterTemporaryFoldersTest extends DistributionIntegrationTestBase {
-
-
 
     @Test
     public void testAddExportImportTemp() throws Exception {
@@ -54,11 +53,7 @@ public class DistributionPackageExporterImporterTemporaryFoldersTest extends Dis
         assertNotExists(publishClient, nodePath);
 
         String content = doExport(publish, "temp", DistributionRequestType.PULL);
-
-        Thread.sleep(7000);
-
-        jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/packages/tempvlt/data");
-        assertEquals(0, jcrPackages.size());
+        assertEmptyFolder(publish, "/var/sling/distribution/packages/tempvlt/data");
 
         doImport(publish, "temp", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
         assertExists(publishClient, nodePath);
