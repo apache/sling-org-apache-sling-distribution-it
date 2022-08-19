@@ -34,26 +34,8 @@
     <description>
         Project tests functionality for org.apache.sling.distribution bundle
     </description>
-
-    <!--
-    To keep the instance under test running and run individual tests
-    against it, use:
-
-        mvn clean verify -DkeepJarRunning=true -Dhttp.port=8080
-
-    optionally using jar.executor.vm.options to enable remote debugging,
-    and in another console:
-
-        mvn -o verify -Dtests.to.run=**/**Test.java -Dtest.server.url=http://localhost:8080
-
-    optionally using -Dmaven.surefire.debug to enable debugging.
-    -->
     <properties>
-        <!-- Set this to run tests against an existing server instance or inspect the server after ITs -->
-        <keepJarRunning>false</keepJarRunning>
-
-        <!-- Change this to run selected tests only -->
-        <tests.to.run>**/**Test.java</tests.to.run>
+        <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
     </properties>
 
     <scm>
@@ -66,6 +48,10 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.servicemix.tooling</groupId>
+                <artifactId>depends-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
                 <configuration>
@@ -75,12 +61,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-            </plugin>
-
-            <plugin>
-                <!-- Find free ports to run our server -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
@@ -89,7 +69,6 @@
                         <goals>
                             <goal>reserve-network-port</goal>
                         </goals>
-                        <phase>process-resources</phase>
                         <configuration>
                             <portNames>
                                 <portName>author.http.port</portName>
@@ -102,109 +81,24 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.sling</groupId>
-                <artifactId>slingstart-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <executions>
-                    <execution>
-                        <id>prepare-launchpad-package</id>
-                        <goals>
-                            <goal>prepare-package</goal>
-                        </goals>
-                        <phase>pre-integration-test</phase>
-                    </execution>
-                    <execution>
-                        <id>build-launchpad-package</id>
-                        <goals>
-                            <goal>package</goal>
-                        </goals>
-                        <phase>pre-integration-test</phase>
-                    </execution>
-                    <execution>
-                        <id>start-container-before-IT</id>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>stop-container-after-IT</id>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                        <configuration>
-                            <shouldBlockUntilKeyIsPressed>${keepJarRunning}</shouldBlockUntilKeyIsPressed>
-                        </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <usePomDependencies>true</usePomDependencies>
-                    <servers>
-                        <server>
-                            <id>author</id>
-                            <port>${author.http.port}</port>
-                            <runmode>author,notshared</runmode>
-                        </server>
-                        <server>
-                            <id>publish</id>
-                            <port>${publish.http.port}</port>
-                            <runmode>publish,notshared</runmode>
-                        </server>
-                        <server>
-                            <id>author-shared</id>
-                            <port>${author-shared.http.port}</port>
-                            <runmode>author,shared</runmode>
-                        </server>
-                        <server>
-                            <id>publish-shared</id>
-                            <port>${publish-shared.http.port}</port>
-                            <runmode>publish,shared</runmode>
-                        </server>
-                    </servers>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <!-- We run all tests in the integration-tests phase -->
-                    <excludes>
-                        <exclude>**</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>integration-test</id>
                         <goals>
                             <goal>integration-test</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>verify</id>
-                        <goals>
                             <goal>verify</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <includes>
-                        <include>${tests.to.run}</include>
-                    </includes>
-                    <systemPropertyVariables>
-                        <launchpad.http.server.url>http://localhost:${author.http.port}</launchpad.http.server.url>
-                        <server.ready.timeout.seconds>240</server.ready.timeout.seconds>
-
-                        <launchpad.http.server.url.author>http://localhost:${author.http.port}</launchpad.http.server.url.author>
-                        <launchpad.http.server.url.publish>http://localhost:${publish.http.port}</launchpad.http.server.url.publish>
-                        <launchpad.http.server.url.author.shared>http://localhost:${author-shared.http.port}</launchpad.http.server.url.author.shared>
-                        <launchpad.http.server.url.publish.shared>http://localhost:${publish-shared.http.port}</launchpad.http.server.url.publish.shared>
-
-                        <!-- Define additional bundles to install -->
-                        <!--<additional.bundles.path>${project.build.directory}</additional.bundles.path>
-                        <sling.additional.bundle.1>${project.build.finalName}.jar</sling.additional.bundle.1>-->
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    <systemPropertyVariables combine.children="append">
+                        <bundle.filename>${basedir}/target/${project.build.finalName}.jar</bundle.filename>
+                        <authorPort>${author.http.port}</authorPort>
+                        <publishPort>${publish.http.port}</publishPort>
+                        <sharedAuthorPort>${author-shared.http.port}</sharedAuthorPort>
+                        <sharedPublisherPort>${publish-shared.http.port}</sharedPublisherPort>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -212,6 +106,18 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.jackrabbit.vault</groupId>
+            <artifactId>org.apache.jackrabbit.vault</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>6.0.4</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Additional bundles needed by the Sling instance under test -->
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -265,6 +171,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>javax.json</groupId>
+            <artifactId>javax.json-api</artifactId>
+            <version>1.1.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
             <version>2.13.0</version>
@@ -273,9 +185,71 @@
         <!-- Distribution module dependencies -->
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.distribution.api</artifactId>
+            <version>0.7.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.distribution.core</artifactId>
             <version>0.5.0</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.distribution.sample</artifactId>
+            <version>0.1.7-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.paxexam</artifactId>
+            <version>4.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>4.2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>7.0.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-cm</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-forked</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-junit4</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-link-mvn</artifactId>
+            <version>${org.ops4j.pax.exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

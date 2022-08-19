@@ -20,7 +20,12 @@ package org.apache.sling.distribution.it;
 
 import org.apache.http.protocol.HTTP;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.junit.AfterClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
@@ -28,19 +33,19 @@ import static org.apache.sling.distribution.it.DistributionUtils.createRandomNod
 import static org.apache.sling.distribution.it.DistributionUtils.doExport;
 import static org.apache.sling.distribution.it.DistributionUtils.doImport;
 
-public class DistributionPackageExporterImporterTest extends DistributionIntegrationTestBase {
+public class DistributionPackageExporterImporterTestIT extends DistributionIntegrationTestBase {
 
     @Test
     public void testAddExportImport() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
         assertExists(publishClient, nodePath);
 
-        String content = doExport(publish, "default", DistributionRequestType.ADD, nodePath);
+        String content = doExport(publishClient, "default", DistributionRequestType.ADD, nodePath);
 
         publishClient.deletePath(nodePath);
         assertNotExists(publishClient, nodePath);
 
-        doImport(publish, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
+        doImport(publishClient, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
         assertExists(publishClient, nodePath);
 
     }
@@ -50,9 +55,14 @@ public class DistributionPackageExporterImporterTest extends DistributionIntegra
         String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
         assertExists(publishClient, nodePath);
 
-        String content = doExport(publish, "default", DistributionRequestType.DELETE, nodePath);
+        String content = doExport(publishClient, "default", DistributionRequestType.DELETE, nodePath);
 
-        doImport(publish, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
+        doImport(publishClient, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
         assertNotExists(publishClient, nodePath);
     }
+
+    /*@AfterClass
+    public static void killInstances(){
+        killContainers();
+    }*/
 }

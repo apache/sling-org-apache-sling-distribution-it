@@ -20,7 +20,12 @@ package org.apache.sling.distribution.it;
 
 import org.apache.http.protocol.HTTP;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.junit.AfterClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 import java.util.List;
 
@@ -34,29 +39,33 @@ import static org.apache.sling.distribution.it.DistributionUtils.doImport;
 import static org.apache.sling.distribution.it.DistributionUtils.getChildrenForFolder;
 import static org.junit.Assert.assertEquals;
 
-public class DistributionPackageExporterImporterTemporaryFoldersTest extends DistributionIntegrationTestBase {
+public class DistributionPackageExporterImporterTemporaryFoldersTestIT extends DistributionIntegrationTestBase {
 
     @Test
     public void testAddExportImportTemp() throws Exception {
 
-        List<String> jcrPackages =  null;
+        List<String> jcrPackages;
 
         String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
         assertExists(publishClient, nodePath);
 
-        distribute(publish, "temp", DistributionRequestType.ADD, nodePath);
+        distribute(publishClient, "temp", DistributionRequestType.ADD, nodePath);
 
-        jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/packages/tempvlt/data");
+        jcrPackages =  getChildrenForFolder(publishClient, "/var/sling/distribution/packages/tempvlt/data");
         assertEquals(1, jcrPackages.size());
 
         publishClient.deletePath(nodePath);
         assertNotExists(publishClient, nodePath);
 
-        String content = doExport(publish, "temp", DistributionRequestType.PULL);
-        assertEmptyFolder(publish, "/var/sling/distribution/packages/tempvlt/data");
+        String content = doExport(publishClient, "temp", DistributionRequestType.PULL);
+        assertEmptyFolder(publishClient, "/var/sling/distribution/packages/tempvlt/data");
 
-        doImport(publish, "temp", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
+        doImport(publishClient, "temp", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
         assertExists(publishClient, nodePath);
-
     }
+
+    /*@AfterClass
+    public static void killInstances(){
+        killContainers();
+    }*/
 }

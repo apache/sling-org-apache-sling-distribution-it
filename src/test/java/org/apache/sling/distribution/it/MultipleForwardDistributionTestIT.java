@@ -22,8 +22,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.sling.distribution.DistributionRequestType;
 import org.apache.sling.testing.clients.ClientException;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 import java.io.IOException;
 
@@ -40,7 +45,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Integration test for forward distribution
  */
-public class MultipleForwardDistributionTest extends DistributionIntegrationTestBase {
+public class MultipleForwardDistributionTestIT extends DistributionIntegrationTestBase {
 
     final static String DELETE_LIMIT = "100";
 
@@ -48,7 +53,7 @@ public class MultipleForwardDistributionTest extends DistributionIntegrationTest
     public void testAddContent() throws Exception {
         String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
         assertExists(authorClient, nodePath);
-        distribute(author, "publish-multiple", DistributionRequestType.ADD, nodePath);
+        distribute(authorClient, "publish-multiple", DistributionRequestType.ADD, nodePath);
         assertExists(publishClient, nodePath);
     }
 
@@ -56,7 +61,7 @@ public class MultipleForwardDistributionTest extends DistributionIntegrationTest
     public void testDeleteContent() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/forward_del_" + System.nanoTime());
         assertExists(publishClient, nodePath);
-        distribute(author, "publish-multiple", DistributionRequestType.DELETE, nodePath);
+        distribute(authorClient, "publish-multiple", DistributionRequestType.DELETE, nodePath);
         assertNotExists(publishClient, nodePath);
     }
 
@@ -65,21 +70,21 @@ public class MultipleForwardDistributionTest extends DistributionIntegrationTest
     public void testAddContentCheckPassiveQueue() throws Exception {
         String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
         assertExists(authorClient, nodePath);
-        distribute(author, "publish-multiple", DistributionRequestType.ADD, nodePath);
+        distribute(authorClient, "publish-multiple", DistributionRequestType.ADD, nodePath);
         assertExists(publishClient, nodePath);
 
         {
-            JsonNode jsonNode = getResource(author, queueUrl("publish-multiple") + "/passivequeue1");
+            JsonNode jsonNode = getResource(authorClient, queueUrl("publish-multiple") + "/passivequeue1");
 
             JsonNode queueItems = jsonNode.get("items");
             assertEquals(1, queueItems.size());
             assertEquals(1, jsonNode.get("itemsCount"));
         }
 
-        String content = doExport(author, "publish-multiple-passivequeue1", DistributionRequestType.PULL, null);
+        String content = doExport(authorClient, "publish-multiple-passivequeue1", DistributionRequestType.PULL, null);
 
         {
-            JsonNode jsonNode = getResource(author, queueUrl("publish-multiple") + "/passivequeue1");
+            JsonNode jsonNode = getResource(authorClient, queueUrl("publish-multiple") + "/passivequeue1");
 
             JsonNode queueItems = jsonNode.get("items");
             assertEquals(0, queueItems.size());
@@ -89,10 +94,15 @@ public class MultipleForwardDistributionTest extends DistributionIntegrationTest
 
     @After
     public void clean() throws IOException, ClientException {
-        assertPostResourceWithParameters(author, 200, queueUrl("publish-multiple") + "/endpoint1",
+        assertPostResourceWithParameters(authorClient, 200, queueUrl("publish-multiple") + "/endpoint1",
                 "operation", "delete", "limit", DELETE_LIMIT);
 
-        assertPostResourceWithParameters(author, 200, queueUrl("publish-multiple") + "/endpoint2",
+        assertPostResourceWithParameters(authorClient, 200, queueUrl("publish-multiple") + "/endpoint2",
                 "operation", "delete", "limit", DELETE_LIMIT);
     }
+
+    /*@AfterClass
+    public static void killInstances(){
+        killContainers();
+    }*/
 }

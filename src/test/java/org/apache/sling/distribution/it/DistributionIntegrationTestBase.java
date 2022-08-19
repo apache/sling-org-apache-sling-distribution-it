@@ -19,15 +19,16 @@
 package org.apache.sling.distribution.it;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import javax.json.JsonException;
 
 import org.apache.sling.testing.clients.ClientException;
 import org.apache.sling.testing.clients.SlingClient;
-import org.apache.sling.testing.serversetup.instance.SlingInstance;
-import org.apache.sling.testing.serversetup.instance.SlingInstanceState;
-import org.apache.sling.testing.serversetup.instance.SlingTestBase;
 import org.junit.After;
+import org.ops4j.pax.exam.TestContainer;
 
 import static org.apache.sling.distribution.it.DistributionUtils.agentUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.assertEmptyFolder;
@@ -36,14 +37,17 @@ import static org.apache.sling.distribution.it.DistributionUtils.authorAgentConf
 import static org.apache.sling.distribution.it.DistributionUtils.exporterUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.importerUrl;
 import static org.apache.sling.distribution.it.DistributionUtils.setArrayProperties;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Integration test base class for distribution
  */
-public abstract class DistributionIntegrationTestBase {
+public abstract class DistributionIntegrationTestBase extends DistributionTestSupport {
 
-    protected SlingInstance author;
-    protected SlingInstance publish;
+    private static TestContainer authorContainer;
+    private static TestContainer publishContainer;
+    private static TestContainer authorSharedContainer;
+    private static TestContainer publishSharedContainer;
 
     protected SlingClient authorClient;
     protected SlingClient publishClient;
@@ -56,33 +60,53 @@ public abstract class DistributionIntegrationTestBase {
 
     protected DistributionIntegrationTestBase(boolean useShared) {
         try {
-            init(useShared);
-        } catch (ClientException e) {
+            startContainers(useShared);
+        } catch (ClientException | URISyntaxException e) {
             e.printStackTrace();
         }
     }
 
-    synchronized void init(boolean useShared) throws ClientException {
-        if (useShared) {
-            System.setProperty("test.server.url", System.getProperty("launchpad.http.server.url.author.shared"));
-            author = new SlingTestBase(SlingInstanceState.getInstance("author-shared"), System.getProperties());
+    private void startContainers(boolean useShared) throws ClientException, URISyntaxException {
+        if (useShared) { //spin up shared instances
+            if (authorSharedContainer == null) {
+                authorSharedContainer = startContainer(shareAuthorConfig());
+            }
+            if (publishSharedContainer == null) {
+                publishSharedContainer = startContainer(sharedPublishConfig());
+            }
+            //wait for shared author
+            waitForPath(sharedAuthorPort, "/libs/sling/distribution/settings/agents/publish");
+            //wait for shared publisher
+            waitForPath(sharedPublisherPort, "/libs/sling/distribution/settings/agents/reverse");
+            authorClient = new SlingClient(new URI("http://localhost:" + sharedAuthorPort), DEFAULT_USERNAME, DEFAULT_PASSWORD);
+            publishClient = new SlingClient(new URI("http://localhost:" + sharedPublisherPort), DEFAULT_USERNAME, DEFAULT_PASSWORD);
 
-            System.setProperty("test.server.url", System.getProperty("launchpad.http.server.url.publish.shared"));
-            publish = new SlingTestBase(SlingInstanceState.getInstance("publish-shared"), System.getProperties());
-
-        } else {
-            System.setProperty("test.server.url", System.getProperty("launchpad.http.server.url.author"));
-            author = new SlingTestBase(SlingInstanceState.getInstance("author"), System.getProperties());
-
-            System.setProperty("test.server.url", System.getProperty("launchpad.http.server.url.publish"));
-            publish = new SlingTestBase(SlingInstanceState.getInstance("publish"), System.getProperties());
+        } else { //spin up not-shared instances
+            if (authorContainer == null) {
+                authorContainer = startContainer(authorConfig());
+            }
+            if (publishContainer == null) {
+                publishContainer = startContainer(publishConfig());
+            }
+            //Start up finished
+            await().atMost(120, TimeUnit.SECONDS);
+            //wait for author
+            waitForPath(authorPort, "/libs/sling/distribution/settings/agents/publish");
+            //wait for publish
+            waitForPath(publisherPort, "/libs/sling/distribution/settings/agents/reverse");
+            authorClient = new SlingClient(new URI("http://localhost:" + authorPort), DEFAULT_USERNAME, DEFAULT_PASSWORD);
+            publishClient = new SlingClient(new URI("http://localhost:" + publisherPort), DEFAULT_USERNAME, DEFAULT_PASSWORD);
         }
-        authorClient = author.getSlingClient();
-        publishClient = publish.getSlingClient();
+        //Debugging
+        logger.info("====================================================");
+        logger.info("AUTHOR PORT: {}", authorPort);
+        logger.info("PUBLISH PORT: {}", publisherPort);
+        logger.info("AUTHOR SHARED PORT: {}", sharedAuthorPort);
+        logger.info("PUBLISH SHARED PORT: {}", sharedPublisherPort);
+        logger.info("====================================================");
 
         try {
-
-            String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl("default");
+            String remoteImporterUrl = authorClient.getUrl() + importerUrl("default");
 
             registerPublish("publish", "default");
             registerPublish("impersonate-publish", "default");
@@ -92,20 +116,18 @@ public abstract class DistributionIntegrationTestBase {
 
             {
                 assertExists(authorClient, authorAgentConfigUrl("publish-multiple"));
-                setArrayProperties(author, authorAgentConfigUrl("publish-multiple"),
+                setArrayProperties(authorClient, authorAgentConfigUrl("publish-multiple"),
                         "packageImporter.endpoints", "endpoint1=" + remoteImporterUrl, "endpoint2=" + remoteImporterUrl + "badaddress");
 
-                Thread.sleep(1000);
                 assertExists(authorClient, agentUrl("publish-multiple"));
                 assertExists(authorClient, exporterUrl("publish-multiple-passivequeue1"));
             }
 
             {
                 assertExists(authorClient, authorAgentConfigUrl("publish-selective"));
-                setArrayProperties(author, authorAgentConfigUrl("publish-selective"),
+                setArrayProperties(authorClient, authorAgentConfigUrl("publish-selective"),
                         "packageImporter.endpoints", "publisher1=" + remoteImporterUrl);
 
-                Thread.sleep(1000);
                 assertExists(authorClient, agentUrl("publish-selective"));
             }
 
@@ -116,33 +138,38 @@ public abstract class DistributionIntegrationTestBase {
 
     @After
     public void checkNoPackagesLeft() throws IOException, JsonException, InterruptedException, ClientException {
-        assertEmptyFolder(author, "/var/sling/distribution/packages/default/shared");
-        assertEmptyFolder(author, "/var/sling/distribution/packages/default/data");
-        assertEmptyFolder(author, "/etc/packages/sling/distribution");
+        assertEmptyFolder(authorClient, "/var/sling/distribution/packages/default/shared");
+        assertEmptyFolder(authorClient, "/var/sling/distribution/packages/default/data");
+        assertEmptyFolder(authorClient, "/etc/packages/sling/distribution");
 
-        assertEmptyFolder(publish, "/var/sling/distribution/packages/default/shared");
-        assertEmptyFolder(publish, "/var/sling/distribution/packages/default/data");
-        assertEmptyFolder(publish, "/etc/packages/sling/distribution");
+        assertEmptyFolder(publishClient, "/var/sling/distribution/packages/default/shared");
+        assertEmptyFolder(publishClient, "/var/sling/distribution/packages/default/data");
+        assertEmptyFolder(publishClient, "/etc/packages/sling/distribution");
+    }
+
+    public static void killContainers() {
+        stopContainer(authorContainer);
+        stopContainer(publishContainer);
+        stopContainer(authorSharedContainer);
+        stopContainer(publishSharedContainer);
     }
 
     public void registerPublish(String publishAgent, String remoteImporter) throws Exception {
-        String remoteImporterUrl = publish.getServerBaseUrl() + importerUrl(remoteImporter);
+        String remoteImporterUrl = publishClient.getUrl() + importerUrl(remoteImporter);
         assertExists(authorClient, authorAgentConfigUrl(publishAgent));
 
-        authorClient.setPropertyString(authorAgentConfigUrl(publishAgent),"packageImporter.endpoints", remoteImporterUrl);
-        Thread.sleep(1000);
+        authorClient.setPropertyString(authorAgentConfigUrl(publishAgent), "packageImporter.endpoints", remoteImporterUrl);
 
         assertExists(authorClient, agentUrl(publishAgent));
         assertExists(publishClient, importerUrl(remoteImporter));
     }
 
     public void registerReverse(String reverseAgent, String remoteExporter) throws Exception {
-        String remoteExporterUrl = publish.getServerBaseUrl() + exporterUrl(remoteExporter);
-
+        String remoteExporterUrl = publishClient.getUrl() + exporterUrl(remoteExporter);
         assertExists(authorClient, authorAgentConfigUrl(reverseAgent));
+
         authorClient.setPropertyString(authorAgentConfigUrl(reverseAgent), "packageExporter.endpoints", remoteExporterUrl);
 
-        Thread.sleep(1000);
         assertExists(authorClient, agentUrl(reverseAgent));
         assertExists(publishClient, exporterUrl(remoteExporter));
     }
