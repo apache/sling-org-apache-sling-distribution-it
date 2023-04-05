@@ -18,7 +18,12 @@
  */
 package org.apache.sling.distribution.it;
 
+import org.junit.AfterClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertResponseContains;
@@ -26,15 +31,15 @@ import static org.apache.sling.distribution.it.DistributionUtils.importerRootUrl
 import static org.apache.sling.distribution.it.DistributionUtils.importerUrl;
 
 /**
- * Integration test for {@link org.apache.sling.distribution.packaging.DistributionPackageImporter} resources
+ * Integration test for {@link org.apache.sling.distribution.packaging.impl.DistributionPackageImporter} resources
  */
-public class DistributionPackageImporterResourcesIntegrationTest extends DistributionIntegrationTestBase {
+public class DistributionPackageImporterResourcesIntegrationTestIT extends DistributionIntegrationTestBase {
 
     @Test
     public void testImporterRootResource() throws Exception {
         String rootResource = importerRootUrl();
         assertExists(publishClient, rootResource);
-        assertResponseContains(publish, rootResource,
+        assertResponseContains(publishClient, rootResource,
                 "sling:resourceType", "sling/distribution/service/importer/list",
                 "items", "default");
     }
@@ -43,8 +48,13 @@ public class DistributionPackageImporterResourcesIntegrationTest extends Distrib
     public void testLocalImporterResource() throws Exception {
         String rootResource = importerUrl("default");
         assertExists(publishClient, rootResource);
-        assertResponseContains(publish, rootResource,
+        assertResponseContains(publishClient, rootResource,
                 "sling:resourceType", "sling/distribution/service/importer",
                 "name", "default");
     }
+
+    /*@AfterClass
+    public static void killInstances(){
+        killContainers();
+    }*/
 }

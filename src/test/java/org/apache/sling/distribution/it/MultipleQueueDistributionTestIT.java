@@ -20,7 +20,9 @@ package org.apache.sling.distribution.it;
 
 
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.testing.clients.ClientException;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -39,21 +41,19 @@ import static org.apache.sling.distribution.it.DistributionUtils.queueUrl;
 /**
  * Integration test for forward distribution
  */
-public class MultipleQueueDistributionTest extends DistributionIntegrationTestBase {
+public class MultipleQueueDistributionTestIT extends DistributionIntegrationTestBase {
 
     final static String DELETE_LIMIT = "100";
 
     @Ignore
     @Test
     public void testQueues() throws Exception {
-        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(author, "queue-multiple");
+        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(authorClient, "queue-multiple");
         assertEquals(2, queues.size());
         assertNotNull(queues.get("endpoint1"));
         assertEquals(true, queues.get("endpoint1").get("empty"));
         assertNotNull(queues.get("endpoint2"));
         assertEquals(true, queues.get("endpoint2").get("empty"));
-
-
     }
 
     @Ignore
@@ -63,14 +63,13 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
         String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
         assertExists(authorClient, nodePath);
 
-
         // Add two items in both queues
-        distribute(author, "queue-multiple", DistributionRequestType.ADD, nodePath);
-        distribute(author, "queue-multiple", DistributionRequestType.DELETE, nodePath);
+        distribute(authorClient, "queue-multiple", DistributionRequestType.ADD, nodePath);
+        distribute(authorClient, "queue-multiple", DistributionRequestType.DELETE, nodePath);
 
-        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(author, "queue-multiple");
-        List<Map<String, Object>> firstQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint1");
-        List<Map<String, Object>> secondQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint2");
+        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(authorClient, "queue-multiple");
+        List<Map<String, Object>> firstQueueItems = DistributionUtils.getQueueItems(authorClient, queueUrl("queue-multiple") + "/endpoint1");
+        List<Map<String, Object>> secondQueueItems = DistributionUtils.getQueueItems(authorClient, queueUrl("queue-multiple") + "/endpoint2");
 
         assertEquals(2, queues.size());
         assertEquals(false, queues.get("endpoint1").get("empty"));
@@ -79,7 +78,7 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
         assertEquals(2, queues.get("endpoint2").get("itemsCount"));
         assertEquals(2, firstQueueItems.size());
         assertEquals("ADD", firstQueueItems.get(0).get("action"));
-        assertEquals(DistributionUtils.DISTRIBUTOR_USER, firstQueueItems.get(0).get("userid"));
+        assertEquals(DISTRIBUTOR_USER, firstQueueItems.get(0).get("userid"));
         assertEquals("DELETE", firstQueueItems.get(1).get("action"));
         assertEquals(2, secondQueueItems.size());
         assertEquals("ADD", secondQueueItems.get(0).get("action"));
@@ -89,10 +88,10 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
 
 
         // Delete second item from endpoint1
-        assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint1",
+        assertPostResourceWithParameters(authorClient, 200, queueUrl("queue-multiple") + "/endpoint1",
                 "operation", "delete", "id", secondId);
 
-        queues = DistributionUtils.getQueues(author, "queue-multiple");
+        queues = DistributionUtils.getQueues(authorClient, "queue-multiple");
 
         assertEquals(false, queues.get("endpoint1").get("empty"));
         assertEquals(1, queues.get("endpoint1").get("itemsCount"));
@@ -101,10 +100,10 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
         assertEquals(2, queues.get("endpoint2").get("itemsCount"));
 
         // Delete 2 items from endpoint2
-        assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint2",
+        assertPostResourceWithParameters(authorClient, 200, queueUrl("queue-multiple") + "/endpoint2",
                 "operation", "delete", "limit", "2");
 
-        queues = DistributionUtils.getQueues(author, "queue-multiple");
+        queues = DistributionUtils.getQueues(authorClient, "queue-multiple");
 
         assertEquals(false, queues.get("endpoint1").get("empty"));
         assertEquals(1, queues.get("endpoint1").get("itemsCount"));
@@ -121,20 +120,20 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
 
 
         // Add two items in both queues
-        distribute(author, "queue-multiple", DistributionRequestType.ADD, nodePath);
+        distribute(authorClient, "queue-multiple", DistributionRequestType.ADD, nodePath);
 
-        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(author, "queue-multiple");
+        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(authorClient, "queue-multiple");
         assertEquals(1, queues.get("endpoint1").get("itemsCount"));
         assertEquals(1, queues.get("endpoint2").get("itemsCount"));
-        assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint1",
+        assertPostResourceWithParameters(authorClient, 200, queueUrl("queue-multiple") + "/endpoint1",
                 "operation", "delete", "limit", DELETE_LIMIT);
 
-        queues = DistributionUtils.getQueues(author, "queue-multiple");
+        queues = DistributionUtils.getQueues(authorClient, "queue-multiple");
         assertEquals(0, queues.get("endpoint1").get("itemsCount"));
         assertEquals(1, queues.get("endpoint2").get("itemsCount"));
 
-        List<Map<String, Object>> firstQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint1");
-        List<Map<String, Object>> secondQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint2");
+        List<Map<String, Object>> firstQueueItems = DistributionUtils.getQueueItems(authorClient, queueUrl("queue-multiple") + "/endpoint1");
+        List<Map<String, Object>> secondQueueItems = DistributionUtils.getQueueItems(authorClient, queueUrl("queue-multiple") + "/endpoint2");
 
         assertEquals(0, firstQueueItems.size());
         assertEquals(1, secondQueueItems.size());
@@ -142,11 +141,11 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
 
         String secondQueueItemId = (String) secondQueueItems.get(0).get("id");
 
-        assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint1",
+        assertPostResourceWithParameters(authorClient, 200, queueUrl("queue-multiple") + "/endpoint1",
                 "operation", "copy", "id", secondQueueItemId, "from", "endpoint2");
 
-        firstQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint1");
-        secondQueueItems = DistributionUtils.getQueueItems(author, queueUrl("queue-multiple") + "/endpoint2");
+        firstQueueItems = DistributionUtils.getQueueItems(authorClient, queueUrl("queue-multiple") + "/endpoint1");
+        secondQueueItems = DistributionUtils.getQueueItems(authorClient, queueUrl("queue-multiple") + "/endpoint2");
 
         assertEquals(1, firstQueueItems.size());
         assertEquals(1, secondQueueItems.size());
@@ -154,13 +153,17 @@ public class MultipleQueueDistributionTest extends DistributionIntegrationTestBa
 
 
     @After
-    public void clean() throws IOException {
-        assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint1",
+    public void clean() throws IOException, ClientException {
+        assertPostResourceWithParameters(authorClient, 200, queueUrl("queue-multiple") + "/endpoint1",
                 "operation", "delete", "limit", DELETE_LIMIT);
 
-        assertPostResourceWithParameters(author, 200, queueUrl("queue-multiple") + "/endpoint2",
+        assertPostResourceWithParameters(authorClient, 200, queueUrl("queue-multiple") + "/endpoint2",
                 "operation", "delete", "limit", DELETE_LIMIT);
 
     }
 
+    /*@AfterClass
+    public static void killInstances(){
+        killContainers();
+    }*/
 }

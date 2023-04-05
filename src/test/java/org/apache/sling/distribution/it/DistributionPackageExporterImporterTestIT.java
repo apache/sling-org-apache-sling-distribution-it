@@ -20,48 +20,49 @@ package org.apache.sling.distribution.it;
 
 import org.apache.http.protocol.HTTP;
 import org.apache.sling.distribution.DistributionRequestType;
+import org.junit.AfterClass;
 import org.junit.Test;
-
-import java.util.List;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.assertNotExists;
 import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
-import static org.apache.sling.distribution.it.DistributionUtils.distribute;
 import static org.apache.sling.distribution.it.DistributionUtils.doExport;
 import static org.apache.sling.distribution.it.DistributionUtils.doImport;
-import static org.apache.sling.distribution.it.DistributionUtils.getChildrenForFolder;
-import static org.junit.Assert.assertEquals;
 
-public class DistributionPackageExporterImporterTemporaryFoldersTest extends DistributionIntegrationTestBase {
-
-
+public class DistributionPackageExporterImporterTestIT extends DistributionIntegrationTestBase {
 
     @Test
-    public void testAddExportImportTemp() throws Exception {
-
-        List<String> jcrPackages =  null;
-
+    public void testAddExportImport() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
         assertExists(publishClient, nodePath);
 
-        distribute(publish, "temp", DistributionRequestType.ADD, nodePath);
+        String content = doExport(publishClient, "default", DistributionRequestType.ADD, nodePath);
 
-        jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/packages/tempvlt/data");
-        assertEquals(1, jcrPackages.size());
-
-        publishClient.delete(nodePath);
+        publishClient.deletePath(nodePath);
         assertNotExists(publishClient, nodePath);
 
-        String content = doExport(publish, "temp", DistributionRequestType.PULL);
-
-        Thread.sleep(5000);
-
-        jcrPackages =  getChildrenForFolder(publish, "/var/sling/distribution/packages/tempvlt/data");
-        assertEquals(0, jcrPackages.size());
-
-        doImport(publish, "temp", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
+        doImport(publishClient, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
         assertExists(publishClient, nodePath);
 
     }
+
+    @Test
+    public void testDeleteExportImport() throws Exception {
+        String nodePath = createRandomNode(publishClient, "/content/export_" + System.nanoTime());
+        assertExists(publishClient, nodePath);
+
+        String content = doExport(publishClient, "default", DistributionRequestType.DELETE, nodePath);
+
+        doImport(publishClient, "default", content.getBytes(HTTP.DEFAULT_CONTENT_CHARSET));
+        assertNotExists(publishClient, nodePath);
+    }
+
+    /*@AfterClass
+    public static void killInstances(){
+        killContainers();
+    }*/
 }

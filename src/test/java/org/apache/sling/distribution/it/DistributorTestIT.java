@@ -16,31 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.sling.distribution.it;
 
-package org.apache.sling.distribution.it.triggers;
-
-
-import org.apache.sling.distribution.it.DistributionIntegrationTestBase;
-import org.junit.Ignore;
+import org.apache.sling.distribution.DistributionRequestType;
 import org.junit.Test;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
-import static org.apache.sling.distribution.it.DistributionUtils.triggerUrl;
+import static org.apache.sling.distribution.it.DistributionUtils.assertPostResourceWithParameters;
+import static org.apache.sling.distribution.it.DistributionUtils.createRandomNode;
 
-@Ignore
-public class DistributionTriggerResourcesTest extends DistributionIntegrationTestBase {
+public class DistributorTestIT extends DistributionIntegrationTestBase {
 
     @Test
-    public void testTestTriggersOnAuthor() throws Exception {
-        String[] names = new String[]{
-                "test-content-event",
-                "test-remote-event",
-                "test-distribute-event",
-                "test-scheduled-event",
-                "test-persisting-event"
-        };
-        for (String name : names) {
-            assertExists(authorClient, triggerUrl(name));
-        }
+    public void testAddContent() throws Exception {
+        String nodePath = createRandomNode(authorClient, "/content/forward_add_" + System.nanoTime());
+        assertExists(authorClient, nodePath);
+
+        assertPostResourceWithParameters(authorClient, 201, "/bin/test/distributor", "agent", "publish",
+                "path", nodePath, "action", DistributionRequestType.ADD.name());
+        assertExists(publishClient, nodePath);
     }
 }

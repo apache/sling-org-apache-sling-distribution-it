@@ -21,19 +21,25 @@ package org.apache.sling.distribution.it;
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
 import static org.apache.sling.distribution.it.DistributionUtils.distributeDeep;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
 
 import org.apache.sling.distribution.DistributionRequestType;
+import org.apache.sling.testing.clients.ClientException;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 @RunWith(Parameterized.class)
-public class ForwardBinaryDistributionTest extends DistributionIntegrationTestBase {
+public class ForwardBinaryDistributionTestIT extends DistributionIntegrationTestBase {
 
     @Parameterized.Parameters
     public static Collection<Object[]> generateData() {
@@ -43,7 +49,7 @@ public class ForwardBinaryDistributionTest extends DistributionIntegrationTestBa
         });
     }
 
-	public ForwardBinaryDistributionTest(boolean useSharedDatastore) {
+	public ForwardBinaryDistributionTestIT(boolean useSharedDatastore) throws ClientException {
         // use instances with shared datastore
 		super(useSharedDatastore);
 	}
@@ -52,13 +58,23 @@ public class ForwardBinaryDistributionTest extends DistributionIntegrationTestBa
 	public void testBinaryDistribution() throws Exception {
         byte[] bytes = new byte[6000];
         new Random().nextBytes(bytes);
-		InputStream data = new ByteArrayInputStream(bytes);
 		String nodePath = "/content/asset.txt";
-		authorClient.upload(nodePath, data, -1, true);
+
+		File file = new File("asset.txt");
+		OutputStream outStream = new FileOutputStream(file);
+		outStream.write(bytes);
+		outStream.close();
+
+		authorClient.upload(file, "application/octet-stream", nodePath, true, 200);
 
 		assertExists(authorClient, nodePath);
-        distributeDeep(author, "publish", DistributionRequestType.ADD, nodePath);
+        distributeDeep(authorClient, "publish", DistributionRequestType.ADD, nodePath);
         assertExists(publishClient, nodePath);
         //TODO: also inspect the package size in binaryless case
 	}
+
+	/*@AfterClass
+	public static void killInstances(){
+		killContainers();
+	}*/
 }

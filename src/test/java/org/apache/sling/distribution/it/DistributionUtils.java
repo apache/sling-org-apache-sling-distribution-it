@@ -16,11 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.sling.distribution.it;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -28,21 +26,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonException;
-import javax.json.JsonObject;
-import javax.json.JsonString;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.distribution.DistributionRequestType;
-import org.apache.sling.testing.tools.http.Request;
-import org.apache.sling.testing.tools.sling.SlingClient;
-import org.apache.sling.testing.tools.sling.SlingInstance;
+import org.apache.sling.testing.clients.ClientException;
+import org.apache.sling.testing.clients.SlingClient;
+import org.apache.sling.testing.clients.SlingHttpResponse;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -58,105 +53,83 @@ public class DistributionUtils {
     public static final String DISTRIBUTOR_USER = "testDistributorUser";
     private static final String DISTRIBUTOR_PASSWORD = "123";
 
-
-    public static JsonObject getResource(SlingInstance slingInstance, String path) throws IOException, JsonException {
+    public static JsonNode getResource(SlingClient slingClient, String path) throws JsonException, ClientException {
         if (!path.endsWith(JSON_SELECTOR)) {
             path += JSON_SELECTOR;
         }
-        Request request = slingInstance.getRequestBuilder().buildGetRequest(path)
-                .withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword());
-
-
-        // Get list of tests in JSON format
-        String content = slingInstance.getRequestExecutor().execute(request)
-                .assertStatus(200)
-                .assertContentType("application/json").getContent();
-
-        // Parse JSON response for more precise testing
-
-        return Json.createReader(new StringReader(content)).readObject();
+        return slingClient.doGetJson(path, 200);
     }
 
-    public static String assertPostResourceWithParameters(SlingInstance slingInstance,
-                                                           int status, String path, String... parameters) throws IOException {
-        Request request = slingInstance.getRequestBuilder().buildPostRequest(path);
-
+    public static String assertPostResourceWithParameters(SlingClient slingClient,
+                                                          int status, String path,
+                                                          String... parameters) throws IOException, ClientException {
+        UrlEncodedFormEntity urlEncodedFormEntity;
         if (parameters != null) {
             assertEquals(0, parameters.length % 2);
-            List<NameValuePair> valuePairList = new ArrayList<NameValuePair>();
+            List<NameValuePair> valuePairList = new ArrayList<>();
 
             for (int i = 0; i < parameters.length; i += 2) {
                 valuePairList.add(new BasicNameValuePair(parameters[i], parameters[i + 1]));
             }
-            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(valuePairList);
-            request.withEntity(entity);
+            urlEncodedFormEntity = new UrlEncodedFormEntity(valuePairList);
+
+        } else {
+            urlEncodedFormEntity = new UrlEncodedFormEntity(new ArrayList<>());
         }
 
-        return slingInstance.getRequestExecutor().execute(
-                request.withCredentials(DISTRIBUTOR_USER, DISTRIBUTOR_PASSWORD)
-        ).assertStatus(status).getContent();
+        SlingClient slingClientRequest =  new SlingClient(slingClient.getUrl(), DISTRIBUTOR_USER, DISTRIBUTOR_PASSWORD);
+        SlingHttpResponse slingHttpResponse = slingClientRequest.doPost(path, urlEncodedFormEntity, status);
+        return slingHttpResponse.getContent();
     }
 
-    private static String assertPostResource(SlingInstance slingInstance,
-                                             int status, String path, byte[] bytes) throws IOException {
-        Request request = slingInstance.getRequestBuilder().buildPostRequest(path);
-
-        if (bytes != null) {
-
-            ByteArrayEntity entity = new ByteArrayEntity(bytes);
-            request.withEntity(entity);
+    private static String assertPostResource(SlingClient slingClient,
+                                             int status, String path, byte[] bytes) throws ClientException {
+        if (bytes == null) {
+            bytes = new byte[0];
         }
-
-        return slingInstance.getRequestExecutor().execute(
-                request.withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword())
-        ).assertStatus(status).getContent();
+        ByteArrayEntity byteArrayEntity = new ByteArrayEntity(bytes);
+        SlingHttpResponse slingHttpResponse = slingClient.doPost(path, byteArrayEntity, status);
+        return slingHttpResponse.getContent();
     }
 
-    public static void setArrayProperties(SlingInstance slingInstance, String resource, String property, String... values) throws IOException {
-        List<String> parameters = new ArrayList<String>();
+    public static void setArrayProperties(SlingClient slingClient, String resource, String property, String... values) throws IOException, ClientException {
+        List<String> parameters = new ArrayList<>();
         for (String value : values) {
             parameters.add(property);
             parameters.add(value);
         }
 
-        assertPostResourceWithParameters(slingInstance, 200, resource, parameters.toArray(new String[parameters.size()]));
-
+        assertPostResourceWithParameters(slingClient, 200, resource, parameters.toArray(new String[parameters.size()]));
     }
 
-    public static void assertResponseContains(SlingInstance slingInstance,
-                                              String resource, String... parameters) throws IOException {
+    public static void assertResponseContains(SlingClient slingClient, String resource, String... parameters) throws ClientException {
         if (!resource.endsWith(JSON_SELECTOR)) {
             resource += JSON_SELECTOR;
         }
-        String content = slingInstance.getRequestExecutor().execute(
-                slingInstance.getRequestBuilder().buildGetRequest(resource)
-                        .withCredentials(slingInstance.getServerUsername(), slingInstance.getServerPassword())
-        ).getContent().replaceAll("\n", "").trim();
 
+        SlingHttpResponse slingHttpResponse = slingClient.doGet(resource, 200);
+        String content = slingHttpResponse.getContent().replaceAll("\n", "").trim();
 
         for (String parameter : parameters) {
-            assertTrue(parameter + " is not contained in " + content,
-                    content.contains(parameter)
-            );
+            assertTrue(parameter + " is not contained in " + content, content.contains(parameter));
         }
     }
 
-
-    public static void distribute(SlingInstance slingInstance, String agentName, DistributionRequestType action, String... paths) throws IOException {
+    public static void distribute(SlingClient slingClient, String agentName, DistributionRequestType action, String... paths) throws IOException, ClientException {
         String agentResource = agentUrl(agentName);
 
-        executeDistributionRequest(slingInstance, 202, agentResource, action, false, paths);
+        executeDistributionRequest(slingClient, 202, agentResource, action, false, paths);
     }
 
-    public static void distributeDeep(SlingInstance slingInstance, String agentName, DistributionRequestType action, String... paths) throws IOException {
+    public static void distributeDeep(SlingClient slingClient, String agentName, DistributionRequestType action, String... paths) throws IOException, ClientException {
         String agentResource = agentUrl(agentName);
 
-        executeDistributionRequest(slingInstance, 202, agentResource, action, true, paths);
+        executeDistributionRequest(slingClient, 202, agentResource, action, true, paths);
     }
 
-    public static String executeDistributionRequest(SlingInstance slingInstance, int status, String resource, DistributionRequestType action, boolean deep, String... paths) throws IOException {
+    public static String executeDistributionRequest(SlingClient slingClient, int status, String resource, DistributionRequestType action, boolean deep, String... paths) throws IOException, ClientException {
 
-        List<String> args = new ArrayList<String>();
+        List<String> args = new ArrayList<>();
         args.add("action");
         args.add(action.toString());
 
@@ -172,23 +145,23 @@ public class DistributionUtils {
             }
         }
 
-        return assertPostResourceWithParameters(slingInstance, status, resource, args.toArray(new String[args.size()]));
+        return assertPostResourceWithParameters(slingClient, status, resource, args.toArray(new String[args.size()]));
     }
 
-    public static String doExport(SlingInstance slingInstance, String exporterName, DistributionRequestType action, String... paths) throws IOException {
+    public static String doExport(SlingClient slingClient, String exporterName, DistributionRequestType action, String... paths) throws IOException, ClientException {
         String exporterUrl = exporterUrl(exporterName);
 
-        return executeDistributionRequest(slingInstance, 200, exporterUrl, action, false, paths);
+        return executeDistributionRequest(slingClient, 200, exporterUrl, action, false, paths);
     }
 
-    public static String doImport(SlingInstance slingInstance, String importerName, byte[] bytes) throws IOException {
+    public static String doImport(SlingClient slingClient, String importerName, byte[] bytes) throws ClientException {
         String agentResource = importerUrl(importerName);
 
-        return assertPostResource(slingInstance, 200, agentResource, bytes);
+        return assertPostResource(slingClient, 200, agentResource, bytes);
     }
 
-    public static void deleteNode(SlingInstance slingInstance, String path) throws IOException {
-        assertPostResourceWithParameters(slingInstance, 200, path, ":operation", "delete");
+    public static void deleteNode(SlingClient slingClient, String path) throws IOException, ClientException {
+        assertPostResourceWithParameters(slingClient, 200, path, ":operation", "delete");
     }
 
     public static void assertExists(SlingClient slingClient, String path) throws Exception {
@@ -212,22 +185,21 @@ public class DistributionUtils {
         if (!slingClient.exists(parentPath)) {
             createNode(slingClient, parentPath);
         }
-
-        slingClient.createNode(nodePath, "jcr:primaryType", "nt:unstructured", "propName", "propValue");
+        slingClient.createNode(nodePath, "nt:unstructured");
+        slingClient.setPropertyString(nodePath, "propName", "propValue");
         return nodePath;
     }
 
-    public static void createNode(SlingClient slingClient, String path) throws IOException {
+    public static void createNode(SlingClient slingClient, String path) throws ClientException {
 
         if (slingClient.exists(path)) {
             return;
         }
 
         String parentPath = Text.getRelativeParent(path, 1);
-
         createNode(slingClient, parentPath);
 
-        slingClient.createNode(path, "jcr:primaryType", "nt:unstructured");
+        slingClient.createNode(path, "nt:unstructured");
     }
 
     public static String agentRootUrl() {
@@ -254,7 +226,6 @@ public class DistributionUtils {
         return DISTRIBUTION_ROOT_PATH + "/settings/agents/" + agentName;
     }
 
-
     public static String importerRootUrl() {
         return DISTRIBUTION_ROOT_PATH + "/services/importers";
     }
@@ -279,7 +250,6 @@ public class DistributionUtils {
         return DISTRIBUTION_ROOT_PATH + "/settings/exporters/" + exporterName;
     }
 
-
     public static String triggerRootUrl() {
         return DISTRIBUTION_ROOT_PATH + "/services/triggers";
     }
@@ -292,22 +262,21 @@ public class DistributionUtils {
         return triggerRootUrl() + "/" + triggerName + ".event";
     }
 
-
-    public static void assertEmptyFolder(SlingInstance instance, SlingClient client, String path) throws IOException, JsonException {
-
-        if (client.exists(path)) {
-            List<String> children = getChildrenForFolder(instance, path);
-
+    public static void assertEmptyFolder(SlingClient slingClient, String path) throws IOException, JsonException, ClientException, InterruptedException {
+        if (slingClient.exists(path)) {
+            int retries = 100;
+            while (getChildrenForFolder(slingClient, path).size() > 0 && retries-- > 0) {
+                Thread.sleep(1000);
+            }
+            List<String> children = getChildrenForFolder(slingClient, path);
             assertEquals(0, children.size());
         }
-
     }
 
-
-    public static List<String> getChildrenForFolder(SlingInstance instance, String path) throws IOException, JsonException {
-        List<String> result = new ArrayList<String>();
-        JsonObject authorJson = getResource(instance, path + ".1.json");
-        Iterator<String> it = authorJson.keySet().iterator();
+    public static List<String> getChildrenForFolder(SlingClient slingClient, String path) throws IOException, JsonException, ClientException {
+        List<String> result = new ArrayList<>();
+        JsonNode authorJson = getResource(slingClient, path + ".1.json");
+        Iterator<String> it = authorJson.fieldNames();
         while (it.hasNext()) {
             String key = it.next();
 
@@ -318,21 +287,20 @@ public class DistributionUtils {
         return result;
     }
 
-    public static Map<String, Map<String, Object>> getQueues(SlingInstance instance, String agentName) throws IOException, JsonException {
-        Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
+    public static Map<String, Map<String, Object>> getQueues(SlingClient slingClient, String agentName) throws JsonException, ClientException {
+        Map<String, Map<String, Object>> result = new HashMap<>();
 
-        JsonObject json = getResource(instance, queueUrl(agentName) + ".infinity");
-
-        JsonArray items = json.getJsonArray("items");
+        JsonNode jsonNode = getResource(slingClient, queueUrl(agentName) + ".infinity");
+        JsonNode items = jsonNode.get("items");
 
         for(int i=0; i < items.size(); i++) {
-            String queueName = items.getString(i);
+            String queueName = items.get(i).textValue();
 
-            Map<String, Object> queueProperties = new HashMap<String, Object>();
+            Map<String, Object> queueProperties = new HashMap<>();
 
-            JsonObject queue = json.getJsonObject(queueName);
-            queueProperties.put("empty", queue.getBoolean("empty"));
-            queueProperties.put("itemsCount", queue.getInt("itemsCount"));
+            JsonNode queue = jsonNode.get(queueName);
+            queueProperties.put("empty", queue.get("empty").booleanValue());
+            queueProperties.put("itemsCount", queue.get("itemsCount").intValue());
 
             result.put(queueName, queueProperties);
         }
@@ -340,43 +308,27 @@ public class DistributionUtils {
         return result;
     }
 
-    public static List<Map<String, Object>> getQueueItems(SlingInstance instance, String queueUrl) throws IOException, JsonException {
-        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+    public static List<Map<String, Object>> getQueueItems(SlingClient slingClient, String queueUrl) throws JsonException, ClientException {
+        List<Map<String, Object>> result = new ArrayList<>();
 
-        JsonObject json = getResource(instance, queueUrl + ".infinity");
+        JsonNode jsonNode = getResource(slingClient, queueUrl + ".infinity");
 
-
-        Iterator<String> keys = json.keySet().iterator();
+        Iterator<String> keys = jsonNode.fieldNames();
         while (keys.hasNext()) {
             String key = keys.next();
-            JsonObject queueItem;
-            Object item = json.get(key);
-            if (item instanceof JsonObject)
-            {
-                queueItem = (JsonObject) item;
-            }
-            else if (item instanceof JsonString) {
-                try {
-                    queueItem = Json.createReader(new StringReader(((JsonString) item).getString())).readObject();
-                } catch (JsonException ex) {
-                    queueItem = null;
-                }
-            }
-            else {
-                queueItem = null;
-            }
-                
-            if (queueItem != null && queueItem.containsKey("id")) {
+            JsonNode queueItem = jsonNode.get(key);
 
-                Map<String, Object> itemProperties = new HashMap<String, Object>();
+            if (queueItem != null && queueItem.has("id")) {
 
-                itemProperties.put("id", queueItem.getString("id"));
-                itemProperties.put("paths", JsonUtil.unbox(queueItem.get("paths")));
+                Map<String, Object> itemProperties = new HashMap<>();
+
+                itemProperties.put("id", queueItem.get("id").textValue());
+                /*itemProperties.put("paths", JsonUtil.unbox(queueItem.get("paths")));
                 itemProperties.put("action", JsonUtil.unbox(queueItem.get("action")));
                 itemProperties.put("userid", JsonUtil.unbox(queueItem.get("userid")));
                 itemProperties.put("attempts", JsonUtil.unbox(queueItem.get("attempts")));
                 itemProperties.put("time", JsonUtil.unbox(queueItem.get("time")));
-                itemProperties.put("state", JsonUtil.unbox(queueItem.get("state")));
+                itemProperties.put("state", JsonUtil.unbox(queueItem.get("state")));*/
 
                 result.add(itemProperties);
             }

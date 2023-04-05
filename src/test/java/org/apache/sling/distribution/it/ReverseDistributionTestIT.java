@@ -19,6 +19,7 @@
 package org.apache.sling.distribution.it;
 
 import org.apache.sling.distribution.DistributionRequestType;
+import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -35,8 +36,7 @@ import static org.apache.sling.distribution.it.DistributionUtils.distribute;
  * Integration test for reverse distribution
  */
 @RunWith(Parameterized.class)
-public class ReverseDistributionTest extends DistributionIntegrationTestBase {
-
+public class ReverseDistributionTestIT extends DistributionIntegrationTestBase {
 
     private final String reverseAgent;
 
@@ -48,8 +48,7 @@ public class ReverseDistributionTest extends DistributionIntegrationTestBase {
         });
     }
 
-    public ReverseDistributionTest(String reverseAgent) {
-
+    public ReverseDistributionTestIT(String reverseAgent) {
         this.reverseAgent = reverseAgent;
     }
 
@@ -58,7 +57,7 @@ public class ReverseDistributionTest extends DistributionIntegrationTestBase {
     public void testAddContent() throws Exception {
         String nodePath = createRandomNode(publishClient, "/content/reverse_add_" + System.nanoTime());
         assertExists(publishClient, nodePath);
-        distribute(publish, reverseAgent, DistributionRequestType.ADD, nodePath);
+        distribute(publishClient, reverseAgent, DistributionRequestType.ADD, nodePath);
         assertExists(authorClient, nodePath);
     }
 
@@ -66,7 +65,7 @@ public class ReverseDistributionTest extends DistributionIntegrationTestBase {
     public void testDeleteContent() throws Exception {
         String nodePath = createRandomNode(authorClient, "/content/reverse_del_" + System.nanoTime());
         assertExists(authorClient, nodePath);
-        distribute(publish, reverseAgent, DistributionRequestType.DELETE, nodePath);
+        distribute(publishClient, reverseAgent, DistributionRequestType.DELETE, nodePath);
         assertNotExists(authorClient, nodePath);
     }
 
@@ -77,11 +76,15 @@ public class ReverseDistributionTest extends DistributionIntegrationTestBase {
         String nodePath2 = createRandomNode(publishClient, "/content/reverse_twoadd_" + System.nanoTime());
         assertExists(publishClient, nodePath2);
 
-        distribute(publish, reverseAgent, DistributionRequestType.ADD, nodePath1);
-        distribute(publish, reverseAgent, DistributionRequestType.ADD, nodePath2);
+        distribute(publishClient, reverseAgent, DistributionRequestType.ADD, nodePath1);
+        distribute(publishClient, reverseAgent, DistributionRequestType.ADD, nodePath2);
 
         assertExists(authorClient, nodePath1);
         assertExists(authorClient, nodePath2);
     }
 
+    /*@AfterClass
+    public static void killInstances(){
+        killContainers();
+    }*/
 }

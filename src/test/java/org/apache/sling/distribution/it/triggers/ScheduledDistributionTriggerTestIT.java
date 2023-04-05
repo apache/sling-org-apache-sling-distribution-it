@@ -28,10 +28,10 @@ import static org.apache.sling.distribution.it.DistributionUtils.triggerEventUrl
 
 @Ignore
 
-public class ScheduledDistributionTriggerTest extends DistributionIntegrationTestBase {
+public class ScheduledDistributionTriggerTestIT extends DistributionIntegrationTestBase {
 
     @Test
     public void testTestTriggersOnAuthor() throws Exception {
-        assertResponseContains(author, triggerEventUrl("test-scheduled-event"), "PULL");
+        assertResponseContains(authorClient, triggerEventUrl("test-scheduled-event"), "PULL");
     }
 }

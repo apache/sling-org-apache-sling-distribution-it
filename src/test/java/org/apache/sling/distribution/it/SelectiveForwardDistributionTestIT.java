@@ -19,8 +19,12 @@
 package org.apache.sling.distribution.it;
 
 import org.apache.sling.distribution.DistributionRequestType;
+import org.junit.AfterClass;
 import org.junit.Test;
-
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 import java.util.Map;
 
 import static org.apache.sling.distribution.it.DistributionUtils.assertExists;
@@ -32,13 +36,11 @@ import static org.junit.Assert.assertEquals;
 /**
  * Integration test for forward distribution
  */
-public class SelectiveForwardDistributionTest extends DistributionIntegrationTestBase {
-
+public class SelectiveForwardDistributionTestIT extends DistributionIntegrationTestBase {
 
     @Test
     public void testQueues() throws Exception {
-
-        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(author, "publish-selective");
+        Map<String, Map<String, Object>> queues = DistributionUtils.getQueues(authorClient, "publish-selective");
         assertEquals(2, queues.size());
     }
 
@@ -50,8 +52,8 @@ public class SelectiveForwardDistributionTest extends DistributionIntegrationTes
         assertExists(authorClient, nodePath1);
         assertExists(authorClient, nodePath2);
 
-        distribute(author, "publish-selective", DistributionRequestType.ADD, nodePath1);
-        distribute(author, "publish-selective", DistributionRequestType.ADD, nodePath2);
+        distribute(authorClient, "publish-selective", DistributionRequestType.ADD, nodePath1);
+        distribute(authorClient, "publish-selective", DistributionRequestType.ADD, nodePath2);
 
         assertExists(publishClient, nodePath1);
         assertExists(publishClient, nodePath2);
@@ -65,11 +67,15 @@ public class SelectiveForwardDistributionTest extends DistributionIntegrationTes
         assertExists(publishClient, nodePath1);
         assertExists(publishClient, nodePath2);
 
-        distribute(author, "publish-selective", DistributionRequestType.DELETE, nodePath1);
-        distribute(author, "publish-selective", DistributionRequestType.DELETE, nodePath2);
+        distribute(authorClient, "publish-selective", DistributionRequestType.DELETE, nodePath1);
+        distribute(authorClient, "publish-selective", DistributionRequestType.DELETE, nodePath2);
 
         assertNotExists(publishClient, nodePath1);
         assertNotExists(publishClient, nodePath2);
-
     }
+
+    /*@AfterClass
+    public static void killInstances(){
+        killContainers();
+    }*/
 }
